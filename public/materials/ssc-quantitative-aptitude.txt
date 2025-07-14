@@ -1,0 +1,154 @@
+SSC QUANTITATIVE APTITUDE GUIDE
+===============================
+
+NUMBER SYSTEM
+=============
+
+1. TYPES OF NUMBERS
+- Natural Numbers: 1, 2, 3, 4, 5, ...
+- Whole Numbers: 0, 1, 2, 3, 4, 5, ...
+- Integers: ..., -3, -2, -1, 0, 1, 2, 3, ...
+- Rational Numbers: Numbers that can be expressed as p/q
+- Irrational Numbers: Numbers that cannot be expressed as p/q
+- Real Numbers: All rational and irrational numbers
+
+2. DIVISIBILITY RULES
+- Divisible by 2: Last digit is even (0, 2, 4, 6, 8)
+- Divisible by 3: Sum of digits is divisible by 3
+- Divisible by 4: Last two digits form a number divisible by 4
+- Divisible by 5: Last digit is 0 or 5
+- Divisible by 6: Divisible by both 2 and 3
+- Divisible by 8: Last three digits form a number divisible by 8
+- Divisible by 9: Sum of digits is divisible by 9
+- Divisible by 10: Last digit is 0
+- Divisible by 11: Difference between sum of digits at odd and even places is 0 or divisible by 11
+
+PERCENTAGE
+==========
+
+1. BASIC CONCEPTS
+- Percentage = (Value/Total) × 100
+- Value = (Percentage × Total)/100
+- Total = (Value × 100)/Percentage
+
+2. IMPORTANT FORMULAS
+- If A is x% more than B, then B is [x/(100+x)] × 100% less than A
+- If A is x% less than B, then B is [x/(100-x)] × 100% more than A
+- Successive percentage change: a% + b% + (a×b)/100%
+
+PROFIT AND LOSS
+===============
+
+1. BASIC FORMULAS
+- Profit = Selling Price - Cost Price
+- Loss = Cost Price - Selling Price
+- Profit % = (Profit/Cost Price) × 100
+- Loss % = (Loss/Cost Price) × 100
+- Selling Price = Cost Price × (100 + Profit%)/100
+- Selling Price = Cost Price × (100 - Loss%)/100
+
+2. DISCOUNT
+- Discount = Marked Price - Selling Price
+- Discount % = (Discount/Marked Price) × 100
+- Selling Price = Marked Price × (100 - Discount%)/100
+
+SIMPLE AND COMPOUND INTEREST
+============================
+
+1. SIMPLE INTEREST
+- SI = (P × R × T)/100
+- Amount = P + SI
+- Where P = Principal, R = Rate, T = Time
+
+2. COMPOUND INTEREST
+- Amount = P(1 + R/100)^T
+- CI = Amount - Principal
+- For half-yearly: R/2 and T×2
+- For quarterly: R/4 and T×4
+
+TIME AND WORK
+=============
+
+1. BASIC CONCEPTS
+- If A can do a work in x days, then A's 1 day work = 1/x
+- If A and B can do a work in x and y days respectively, then together they can do it in xy/(x+y) days
+
+2. EFFICIENCY
+- If A is twice as efficient as B, then A takes half the time B takes
+- If A and B can do a work in x and y days, and A is n times more efficient than B, then x = y/n
+
+TIME AND DISTANCE
+=================
+
+1. BASIC FORMULAS
+- Speed = Distance/Time
+- Distance = Speed × Time
+- Time = Distance/Speed
+
+2. RELATIVE SPEED
+- When moving in same direction: Relative speed = Speed1 - Speed2
+- When moving in opposite direction: Relative speed = Speed1 + Speed2
+
+3. TRAINS
+- Time taken to cross a pole = Length of train/Speed
+- Time taken to cross a platform = (Length of train + Length of platform)/Speed
+
+MIXTURE AND ALLIGATION
+======================
+
+1. BASIC CONCEPT
+- Alligation is a rule that enables us to find the ratio in which two or more ingredients at the given price must be mixed to produce a mixture of desired price.
+
+2. FORMULA
+- (Cheaper quantity)/(Dearer quantity) = (d - m)/(m - c)
+- Where d = dearer price, c = cheaper price, m = mean price
+
+AVERAGE
+========
+
+1. BASIC FORMULA
+- Average = Sum of observations/Number of observations
+
+2. WEIGHTED AVERAGE
+- Weighted Average = (w1x1 + w2x2 + ... + wnxn)/(w1 + w2 + ... + wn)
+
+RATIO AND PROPORTION
+====================
+
+1. RATIO
+- Ratio of a to b is written as a:b
+- If a:b = c:d, then a×d = b×c
+
+2. PROPORTION
+- If a:b = c:d, then a, b, c, d are in proportion
+- Product of extremes = Product of means
+
+SAMPLE QUESTIONS
+================
+
+Q1. A number when divided by 6 leaves a remainder 3. When the square of the number is divided by 6, the remainder is:
+(a) 0 (b) 1 (c) 2 (d) 3
+Answer: (d) 3
+
+Q2. If 20% of a number is 60, then the number is:
+(a) 300 (b) 400 (c) 500 (d) 600
+Answer: (a) 300
+
+Q3. A shopkeeper marks his goods 20% above cost price and allows a discount of 10%. His profit percent is:
+(a) 8% (b) 10% (c) 12% (d) 15%
+Answer: (a) 8%
+
+Q4. The simple interest on a sum of money for 2 years at 8% per annum is Rs. 240. The compound interest on the same sum for the same period at the same rate is:
+(a) Rs. 249.60 (b) Rs. 250 (c) Rs. 251.20 (d) Rs. 252
+Answer: (a) Rs. 249.60
+
+Q5. A can do a piece of work in 10 days and B can do it in 15 days. In how many days will they finish the work working together?
+(a) 5 days (b) 6 days (c) 7 days (d) 8 days
+Answer: (b) 6 days
+
+This is a comprehensive guide for SSC Quantitative Aptitude.
+For more practice questions and detailed solutions, visit our library.
+
+Study Point Library Jiran
+Contact: +91-XXXXXXXXXX
+Email: info@studypointjiran.com 

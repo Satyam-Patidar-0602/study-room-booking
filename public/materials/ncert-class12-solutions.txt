@@ -1,0 +1,50 @@
+NCERT CLASS 12 SOLUTIONS
+========================
+
+PHYSICS SOLUTIONS
+-----------------
+
+Chapter 1: Electric Charges and Fields
+Q1. What is the force between two small charged spheres having charges of 2 × 10^–7C and 3 × 10^–7C placed 30 cm apart in air?
+Solution: Using Coulomb's law, F = k(q1q2)/r²
+F = 9×10^9 × (2×10^-7 × 3×10^-7) / (0.3)²
+F = 6×10^-3 N
+
+Chapter 2: Electrostatic Potential and Capacitance
+Q1. A 600 pF capacitor is charged by a 200 V supply. It is then disconnected from the supply and is connected to another uncharged 600 pF capacitor. How much electrostatic energy is lost in the process?
+Solution: Initial energy = ½CV² = ½ × 600×10^-12 × (200)² = 12×10^-6 J
+Final energy = ½ × 1200×10^-12 × (100)² = 6×10^-6 J
+Energy lost = 6×10^-6 J
+
+CHEMISTRY SOLUTIONS
+-------------------
+
+Chapter 1: The Solid State
+Q1. Define the term 'amorphous'. Give a few examples of amorphous solids.
+Solution: Amorphous solids are those in which the constituent particles are not arranged in a regular manner. Examples: glass, rubber, plastic.
+
+Chapter 2: Solutions
+Q1. Calculate the mass percentage of benzene (C6H6) and carbon tetrachloride (CCl4) if 22 g of benzene is dissolved in 122 g of carbon tetrachloride.
+Solution: Mass percentage of benzene = (22/144) × 100 = 15.28%
+Mass percentage of CCl4 = (122/144) × 100 = 84.72%
+
+MATHEMATICS SOLUTIONS
+---------------------
+
+Chapter 1: Relations and Functions
+Q1. Show that the relation R in the set A = {1, 2, 3, 4, 5} given by R = {(a, b) : |a – b| is even}, is an equivalence relation.
+Solution: 
+(i) Reflexive: |a – a| = 0 is even for all a ∈ A
+(ii) Symmetric: If |a – b| is even, then |b – a| is also even
+(iii) Transitive: If |a – b| and |b – c| are even, then |a – c| is even
+Hence R is an equivalence relation.
+
+Chapter 2: Inverse Trigonometric Functions
+Q1. Find the principal value of sin^-1(-1/2)
+Solution: sin^-1(-1/2) = -π/6 (principal value)
+
+This is a sample study material. For complete solutions, visit our library or contact us for full access to all chapters and subjects.
+
+Study Point Library Jiran
+Contact: +91-XXXXXXXXXX
+Email: info@studypointjiran.com 

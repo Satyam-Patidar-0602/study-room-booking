@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-100 hover:bg-secondary-200 text-secondary-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200;
+  }
+  
+  .seat {
+    @apply w-12 h-12 rounded-lg border-2 transition-all duration-200 cursor-pointer flex items-center justify-center font-medium text-sm;
+  }
+  
+  .seat-available {
+    @apply bg-green-50 border-green-300 text-green-700 hover:bg-green-100 hover:border-green-400;
+  }
+  
+  .seat-booked {
+    @apply bg-red-50 border-red-300 text-red-700 cursor-not-allowed;
+  }
+  
+  .seat-selected {
+    @apply bg-primary-100 border-primary-500 text-primary-700;
+  }
+} 
