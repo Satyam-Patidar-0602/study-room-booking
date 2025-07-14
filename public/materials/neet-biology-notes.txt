@@ -1,0 +1,148 @@
+NEET BIOLOGY NOTES
+==================
+
+UNIT 1: DIVERSITY IN THE LIVING WORLD
+====================================
+
+CHAPTER 1: THE LIVING WORLD
+---------------------------
+
+Characteristics of Living Organisms:
+1. Growth: Increase in mass and number of cells
+2. Reproduction: Ability to produce offspring
+3. Metabolism: Sum total of all chemical reactions
+4. Cellular organization: Made up of cells
+5. Consciousness: Ability to sense environment
+6. Homeostasis: Maintenance of internal environment
+
+Taxonomic Categories:
+- Kingdom
+- Phylum/Division
+- Class
+- Order
+- Family
+- Genus
+- Species
+
+CHAPTER 2: BIOLOGICAL CLASSIFICATION
+-----------------------------------
+
+Five Kingdom Classification (R.H. Whittaker):
+1. Monera: Prokaryotes (bacteria, cyanobacteria)
+2. Protista: Unicellular eukaryotes (protozoa, algae)
+3. Fungi: Multicellular, heterotrophic, cell wall of chitin
+4. Plantae: Multicellular, autotrophic, cell wall of cellulose
+5. Animalia: Multicellular, heterotrophic, no cell wall
+
+UNIT 2: STRUCTURAL ORGANIZATION IN PLANTS AND ANIMALS
+====================================================
+
+CHAPTER 3: PLANT KINGDOM
+------------------------
+
+Algae:
+- Chlorophyceae (Green algae): Chlorella, Volvox
+- Phaeophyceae (Brown algae): Laminaria, Fucus
+- Rhodophyceae (Red algae): Polysiphonia, Porphyra
+
+Bryophytes:
+- Liverworts: Marchantia
+- Mosses: Funaria, Sphagnum
+
+Pteridophytes:
+- Ferns: Dryopteris, Pteris
+- Horsetails: Equisetum
+
+Gymnosperms:
+- Cycas, Pinus, Ginkgo
+
+Angiosperms:
+- Monocots: Rice, Wheat, Maize
+- Dicots: Pea, Sunflower, Rose
+
+CHAPTER 4: ANIMAL KINGDOM
+-------------------------
+
+Phylum Porifera (Sponges):
+- Cellular level of organization
+- Asymmetrical body
+- Examples: Sycon, Spongilla
+
+Phylum Coelenterata:
+- Tissue level of organization
+- Radial symmetry
+- Examples: Hydra, Jellyfish
+
+Phylum Platyhelminthes (Flatworms):
+- Organ level of organization
+- Bilateral symmetry
+- Examples: Planaria, Liver fluke
+
+Phylum Nematoda (Roundworms):
+- Organ level of organization
+- Pseudocoelomate
+- Examples: Ascaris, Wuchereria
+
+Phylum Annelida (Segmented worms):
+- Organ system level
+- True coelom
+- Examples: Earthworm, Leech
+
+Phylum Arthropoda:
+- Jointed appendages
+- Exoskeleton of chitin
+- Examples: Cockroach, Butterfly, Spider
+
+Phylum Mollusca:
+- Soft body with shell
+- Examples: Snail, Octopus, Pearl oyster
+
+Phylum Echinodermata:
+- Spiny skinned
+- Radial symmetry in adults
+- Examples: Starfish, Sea urchin
+
+Phylum Chordata:
+- Notochord present
+- Dorsal nerve cord
+- Pharyngeal gill slits
+- Post-anal tail
+
+UNIT 3: CELL STRUCTURE AND FUNCTION
+===================================
+
+CHAPTER 5: CELL: THE UNIT OF LIFE
+--------------------------------
+
+Cell Theory:
+1. All living organisms are composed of cells
+2. Cell is the basic unit of life
+3. All cells arise from pre-existing cells
+
+Prokaryotic Cell:
+- No nucleus
+- No membrane-bound organelles
+- Examples: Bacteria, Cyanobacteria
+
+Eukaryotic Cell:
+- True nucleus
+- Membrane-bound organelles
+- Examples: Plant and animal cells
+
+Cell Organelles:
+1. Cell Membrane: Selectively permeable
+2. Cell Wall: Present in plants, fungi, bacteria
+3. Nucleus: Contains genetic material
+4. Mitochondria: Powerhouse of cell
+5. Chloroplast: Site of photosynthesis
+6. Endoplasmic Reticulum: Protein and lipid synthesis
+7. Golgi Apparatus: Packaging and secretion
+8. Lysosomes: Digestive enzymes
+9. Vacuoles: Storage and turgidity
+10. Ribosomes: Protein synthesis
+
+This is a sample of NEET Biology notes. For complete notes covering all topics, visit our library.
+
+Study Point Library Jiran
+Contact: +91-XXXXXXXXXX
+Email: info@studypointjiran.com 

@@ -1,0 +1,38 @@
+MP BOARD CLASS 12 MODEL PAPER (SCIENCE)
+=======================================
+
+PHYSICS
+-------
+Q1. What is Ohm's Law? State its mathematical expression.
+Answer: Ohm's Law states that the current through a conductor is directly proportional to the voltage across it, provided temperature remains constant. V = IR
+
+Q2. Define acceleration due to gravity. What is its value on Earth?
+Answer: Acceleration due to gravity is the acceleration experienced by a body due to Earth's gravitational pull. Its value is 9.8 m/s².
+
+CHEMISTRY
+---------
+Q3. What is the pH value of a neutral solution at 25°C?
+Answer: The pH value of a neutral solution at 25°C is 7.
+
+Q4. Name the process used to separate salt from seawater.
+Answer: Evaporation.
+
+MATHEMATICS
+-----------
+Q5. Find the derivative of sin x with respect to x.
+Answer: d/dx (sin x) = cos x
+
+Q6. If the sum of two numbers is 10 and their product is 21, find the numbers.
+Answer: Let the numbers be x and y. x + y = 10, xy = 21. The numbers are 3 and 7.
+
+BIOLOGY
+-------
+Q7. What is the functional unit of kidney?
+Answer: Nephron.
+
+Q8. Name the process by which green plants make their food.
+Answer: Photosynthesis.
+
+---
+
+For more model papers and solutions, visit Study Point Library Jiran. 

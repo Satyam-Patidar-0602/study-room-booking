@@ -1,0 +1,71 @@
+JEE MAIN PREVIOUS YEAR PAPERS
+============================
+
+JEE MAIN 2023 - PAPER 1
+-----------------------
+
+PHYSICS SECTION
+---------------
+
+Q1. A particle of mass m is moving in a circular path of radius r with uniform speed v. The change in momentum when it completes half the circle is:
+(a) mv (b) 2mv (c) mv/2 (d) zero
+Answer: (b) 2mv
+
+Q2. A block of mass 2 kg is placed on a rough inclined plane as shown. The coefficient of static friction between the block and the plane is 0.4. The minimum angle of inclination of the plane for which the block will start sliding is:
+(a) 21.8° (b) 30° (c) 45° (d) 60°
+Answer: (a) 21.8°
+
+CHEMISTRY SECTION
+-----------------
+
+Q1. The IUPAC name of CH3-CH2-CH=CH-CH3 is:
+(a) 2-pentene (b) 3-pentene (c) 2-methyl-2-butene (d) 3-methyl-1-butene
+Answer: (a) 2-pentene
+
+Q2. Which of the following is a strong electrolyte?
+(a) CH3COOH (b) NH4OH (c) NaCl (d) H2O
+Answer: (c) NaCl
+
+MATHEMATICS SECTION
+-------------------
+
+Q1. If sin θ + cos θ = 1, then the value of sin 2θ is:
+(a) 0 (b) 1 (c) -1 (d) 1/2
+Answer: (a) 0
+
+Q2. The number of real roots of the equation x^4 - 4x^3 + 12x^2 - 16x + 8 = 0 is:
+(a) 0 (b) 1 (c) 2 (d) 4
+Answer: (a) 0
+
+JEE MAIN 2022 - PAPER 1
+-----------------------
+
+PHYSICS SECTION
+---------------
+
+Q1. A body is moving with uniform acceleration. Its velocity after 5 seconds is 25 m/s and after 8 seconds is 34 m/s. The acceleration of the body is:
+(a) 3 m/s² (b) 4 m/s² (c) 5 m/s² (d) 6 m/s²
+Answer: (a) 3 m/s²
+
+CHEMISTRY SECTION
+-----------------
+
+Q1. The hybridization of carbon in CH4 is:
+(a) sp (b) sp² (c) sp³ (d) sp³d
+Answer: (c) sp³
+
+MATHEMATICS SECTION
+-------------------
+
+Q1. The value of ∫(x²+1)/(x+1) dx is:
+(a) x²/2 + x + C (b) x²/2 - x + C (c) x²/2 + ln|x+1| + C (d) x²/2 - ln|x+1| + C
+Answer: (c) x²/2 + ln|x+1| + C
+
+SOLUTIONS AND EXPLANATIONS
+-------------------------
+
+Detailed solutions for all questions are available in our library.
+Visit Study Point Library Jiran for complete solutions and more practice papers.
+
+Contact: +91-XXXXXXXXXX
+Email: info@studypointjiran.com 
