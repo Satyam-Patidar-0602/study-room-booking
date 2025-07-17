@@ -64,7 +64,7 @@ const Chatbot = () => {
     },
     'contact': {
       keywords: ['contact', 'phone', 'email', 'reach', 'call'],
-      response: 'You can reach us through:\n• Email: satyamjeeran@gmail.com\n• Phone: +1 (555) 123-4567\n• Instagram: @the_study_point_library_jeeran\n\nWe typically respond within 24 hours.'
+      response: 'You can reach us through:\n• Email: thestudypointlibraryjeeran@gmail.com\n• Phone: +1 (555) 123-4567\n• Instagram: @the_study_point_library_jeeran\n\nWe typically respond within 24 hours.'
     }
   }
 
@@ -85,7 +85,7 @@ const Chatbot = () => {
       }
     }
     
-    return 'I\'m sorry, I don\'t have information about that. Please contact us directly at satyamjeeran@gmail.com or call us for specific assistance.'
+    return 'I\'m sorry, I don\'t have information about that. Please contact us directly at thestudypointlibraryjeeran@gmail.com or call us for specific assistance.'
   }
 
   const handleSendMessage = async () => {

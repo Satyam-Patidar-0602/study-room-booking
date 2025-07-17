@@ -585,8 +585,9 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
               Ready to Start Your Study Journey?
             </h2>
-            <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-              Join hundreds of students who have found their perfect study environment with us.
+            <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
+              Join hundreds of students who have found their perfect study environment with us.<br />
+              <span className="text-sm text-primary-200">Contact: thestudypointlibraryjeeran@gmail.com</span>
             </p>
             <Link
               to="/booking"

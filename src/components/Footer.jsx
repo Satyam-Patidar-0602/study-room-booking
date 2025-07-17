@@ -85,10 +85,10 @@ const Footer = () => {
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-primary-400" />
                 <a 
-                  href="mailto:satyamjeeran@gmail.com"
+                  href="mailto:thestudypointlibraryjeeran@gmail.com"
                   className="text-gray-300 hover:text-primary-400 transition-colors"
                 >
-                  satyamjeeran@gmail.com
+                  thestudypointlibraryjeeran@gmail.com
                 </a>
               </div>
               <div className="flex items-center space-x-3">
@@ -104,6 +104,9 @@ const Footer = () => {
             © 2024 StudySpace. All rights reserved.
           </p>
         </div>
+      </div>
+      <div className="flex flex-wrap gap-4 justify-center mt-4 text-sm text-gray-600">
+        <a href="/admin" className="hover:text-primary-600 underline">Admin</a>
       </div>
     </footer>
   )

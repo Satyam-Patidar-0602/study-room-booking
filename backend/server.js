@@ -7,6 +7,7 @@ require('dotenv').config();
 const bookingsRouter = require('./routes/bookings');
 const uploadRoutes = require('./routes/upload');
 const cashfreeRoutes = require('./routes/cashfree');
+const contactRoute = require('./routes/contact');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -59,6 +60,7 @@ app.get('/health', (req, res) => {
 app.use('/api/bookings', bookingsRouter);
 app.use('/api', uploadRoutes);
 app.use('/api/cashfree', cashfreeRoutes);
+app.use('/api/contact', contactRoute);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -67,6 +69,13 @@ app.use('*', (req, res) => {
     error: 'Route not found' 
   });
 });
+
+if (typeof Headers === "undefined") {
+  global.Headers = require("node-fetch").Headers;
+}
+if (typeof Blob === "undefined") {
+  global.Blob = require("fetch-blob");
+}
 
 // Global error handler
 app.use((error, req, res, next) => {

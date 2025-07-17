@@ -12,6 +12,8 @@ import StudentResources from './pages/StudentResources'
 import Terms from './pages/Terms';
 import RefundPolicy from './pages/RefundPolicy';
 import ContactUs from './pages/ContactUs';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -136,6 +138,14 @@ function App() {
                   <ContactUs />
                 </motion.div>
               } 
+            />
+            <Route 
+              path="/admin" 
+              element={<AdminLogin />} 
+            />
+            <Route 
+              path="/admin/dashboard" 
+              element={<AdminDashboard />} 
             />
           </Routes>
         </AnimatePresence>

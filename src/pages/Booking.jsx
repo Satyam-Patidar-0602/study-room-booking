@@ -31,18 +31,9 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { bookingAPI, apiUtils } from '../services/api'
+import { load as loadCashfree } from '@cashfreepayments/cashfree-js';
 
-// Helper to dynamically load Cashfree SDK
-function loadCashfreeScript(callback) {
-  if (window.Cashfree && typeof window.Cashfree.checkout === "function") {
-    callback();
-    return;
-  }
-  const script = document.createElement('script');
-  script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-  script.onload = callback;
-  document.body.appendChild(script);
-}
+// Remove loadCashfreeScript and window.Cashfree usage
 
 const Booking = () => {
   const navigate = useNavigate()
@@ -238,51 +229,35 @@ const Booking = () => {
       toast.error('Failed to create payment order');
       return;
     }
-
-    // 2. Launch Razorpay Checkout
-    // const options = {
-    //   key: data.order.key_id,
-    //   amount: data.order.amount,
-    //   currency: data.order.currency,
-    //   name: 'The Study Point Library Jiran',
-    //   description: 'Seat Booking Payment',
-    //   order_id: data.order.id,
-    //   handler: function (response) {
-    //     toast.success('Payment successful! Payment ID: ' + response.razorpay_payment_id);
-    //     // Optionally, call your backend to verify payment and complete booking
-    //   },
-    //   prefill: {
-    //     name: data.order.customerName,
-    //     email: data.order.customerEmail,
-    //     contact: data.order.customerPhone
-    //   },
-    //   theme: {
-    //     color: '#6366f1'
-    //   }
-    // };
-    // const rzp = new window.Razorpay(options);
-    // rzp.open();
-
-    // Launch Cashfree Checkout
-    loadCashfreeScript(() => {
-      if (window.Cashfree && window.Cashfree.checkout) {
-        window.Cashfree.checkout({
-          orderToken: data.order.order_token || data.order.order_token,
-          onSuccess: function(data) {
-            toast.success('Payment successful!');
-            // Optionally, call your backend to verify payment and complete booking
-          },
-          onFailure: function(data) {
-            toast.error('Payment failed!');
-          },
-          onError: function(data) {
-            toast.error('Payment error!');
-          }
-        });
-      } else {
-        toast.error('Cashfree SDK failed to load.');
-      }
-    });
+    // Use the official Cashfree JS SDK
+    try {
+      const cashfree = await loadCashfree({ mode: 'sandbox' }); // or 'production' for live
+      cashfree.checkout({
+        paymentSessionId: data.order.payment_session_id,
+        redirectTarget: '_modal',
+      }).then((result) => {
+        if (result.error) {
+          toast.error('Error during checkout: ' + result.error.message);
+          // Optionally, navigate to a failure page:
+          // navigate('/booking-failure', { state: { error: result.error } });
+        } else if (result.paymentDetails) {
+          toast.success('Payment completed!');
+          // Pass booking/payment details to the success page
+          navigate('/booking-success', {
+            state: {
+              bookingDetails: {
+                ...bookingData,
+                paymentDetails: result.paymentDetails,
+              }
+            }
+          });
+        }
+      });
+    } catch (err) {
+      toast.error('Failed to load Cashfree SDK');
+      // Optionally, navigate to a failure page:
+      // navigate('/booking-failure', { state: { error: err } });
+    }
   };
 
   const handleBooking = async () => {
@@ -801,6 +776,7 @@ const Booking = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <Mail className="w-4 h-4 inline mr-2" />
                       Email Address *
+                      <span className="ml-2 text-xs text-primary-600">thestudypointlibraryjeeran@gmail.com</span>
                     </label>
                     <input
                       type="email"

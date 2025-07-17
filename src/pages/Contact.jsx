@@ -61,8 +61,8 @@ const Contact = () => {
     {
       icon: Mail,
       title: 'Email',
-      content: 'satyamjeeran@gmail.com',
-      link: 'mailto:satyamjeeran@gmail.com',
+      content: 'thestudypointlibraryjeeran@gmail.com',
+      link: 'mailto:thestudypointlibraryjeeran@gmail.com',
       color: 'from-purple-500 to-purple-600',
       description: 'Send us an email and we\'ll respond within 24 hours'
     },
@@ -140,39 +140,21 @@ const Contact = () => {
     }
 
     try {
-      // Create email content
-      const emailSubject = `Contact Form: ${formData.subject}`
-      const emailBody = `
-Name: ${formData.name}
-Email: ${formData.email}
-Subject: ${formData.subject}
-
-Message:
-${formData.message}
-
----
-This message was sent from The Study Point Library Jiran contact form.
-      `.trim()
-
-      // Create mailto link
-      const mailtoLink = `mailto:satyamjeeran@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
-
-      // Open default email client
-      window.open(mailtoLink, '_blank')
-
-      // Show success message
-      toast.success('Email client opened! Please send the email to complete your message.')
-      
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: ''
+      // Send to backend
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to send message')
+      }
+      toast.success('Message sent! We will respond as soon as possible.')
+      setFormData({ name: '', email: '', subject: '', message: '' })
     } catch (error) {
-      console.error('Error sending email:', error)
-      toast.error('Failed to open email client. Please try again.')
+      console.error('Error sending message:', error)
+      toast.error(error.message || 'Failed to send message. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -292,8 +274,165 @@ This message was sent from The Study Point Library Jiran contact form.
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      {/* FAQ Section - moved up for prominence */}
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="-mt-16 mb-16 relative z-20"
+      >
+        <div className="max-w-5xl mx-auto bg-white/90 rounded-2xl shadow-2xl p-10 border-2 border-primary-100">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-bold text-primary-700 mb-3 flex items-center justify-center gap-2">
+              <BookOpen className="w-7 h-7 text-primary-600" /> Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-gray-600">
+              Find answers to common questions about our study room services.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[...faqs,
+              { question: "How do I pay for my booking?", answer: "You can pay online using UPI, debit/credit card, or net banking through our secure payment gateway (Cashfree)." },
+              { question: "Is the library open on holidays?", answer: "Yes, we are open 365 days a year, including all public holidays." },
+              { question: "Is there a quiet zone?", answer: "Yes, we have dedicated quiet zones for focused study." },
+              { question: "How can I contact the owners?", answer: "You can email us at thestudypointlibraryjeeran@gmail.com or call the number on the Contact page." }
+            ].map((faq, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.05 }}
+                className="card border border-primary-100 hover:shadow-xl transition-all duration-300 bg-white/95"
+              >
+                <button
+                  onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                  className="w-full text-left flex items-center justify-between p-6 focus:outline-none"
+                >
+                  <h3 className="text-lg font-semibold text-primary-700 pr-4">
+                    {faq.question}
+                  </h3>
+                  <motion.div
+                    animate={{ rotate: expandedFaq === index ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {expandedFaq === index ? (
+                      <ChevronUp className="w-5 h-5 text-primary-600" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    )}
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {expandedFaq === index && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="px-6 pb-6"
+                    >
+                      <div className="border-t border-gray-200 pt-4">
+                        <p className="text-gray-600 leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Main Content Grid: Contact Info and Contact Form side by side */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+          {/* Contact Information */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="space-y-6"
+          >
+            {/* Contact Info Cards */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                Contact Information
+              </h2>
+              
+              {contactInfo.filter(info => info.title !== 'Instagram').map((info, index) => (
+                <motion.div
+                  key={info.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  onHoverStart={() => setHoveredContact(index)}
+                  onHoverEnd={() => setHoveredContact(null)}
+                  className="card hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                >
+                  <div className="flex items-start space-x-4">
+                    <motion.div 
+                      className={`w-12 h-12 bg-gradient-to-br ${info.color} rounded-lg flex items-center justify-center flex-shrink-0 text-white`}
+                      animate={{ 
+                        scale: hoveredContact === index ? 1.2 : 1,
+                        rotate: hoveredContact === index ? 360 : 0
+                      }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {info.icon === 'Instagram' ? (
+                        <Instagram className="w-6 h-6" />
+                      ) : (
+                        <info.icon className="w-6 h-6" />
+                      )}
+                    </motion.div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        {info.title}
+                      </h3>
+                      <div className="flex items-center space-x-2">
+                        {info.link ? (
+                          <a
+                            href={info.link}
+                            className="text-gray-600 hover:text-primary-600 transition-colors duration-200 flex items-center group"
+                          >
+                            {info.content}
+                            <ExternalLink className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </a>
+                        ) : (
+                          <span className="text-gray-600">{info.content}</span>
+                        )}
+                        <motion.button
+                          onClick={() => handleCopy(info.content, info.title)}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          {copiedField === info.title ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-gray-400" />
+                          )}
+                        </motion.button>
+                      </div>
+                      <motion.p
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ 
+                          opacity: hoveredContact === index ? 1 : 0,
+                          height: hoveredContact === index ? 'auto' : 0
+                        }}
+                        className="text-sm text-gray-500 mt-2"
+                      >
+                        {info.description}
+                      </motion.p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Contact Form */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -301,16 +440,16 @@ This message was sent from The Study Point Library Jiran contact form.
             transition={{ duration: 0.6 }}
           >
             <div className="card bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200">
-              <h2 className="text-2xl font-semibold mb-6 flex items-center">
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
                 <MessageSquare className="w-6 h-6 mr-2 text-primary-600" />
                 Send us a Message
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
-                Your message will be sent directly to satyamjeeran@gmail.com. We'll respond to your inquiry as soon as possible.
+              <p className="text-sm text-gray-600 mb-4">
+                Your message will be sent directly to thestudypointlibraryjeeran@gmail.com. We'll respond to your inquiry as soon as possible.
               </p>
               
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.2 }}
@@ -407,265 +546,156 @@ This message was sent from The Study Point Library Jiran contact form.
               </form>
             </div>
           </motion.div>
+        </div>
+      </div>
 
-          {/* Contact Information */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-8"
-          >
-            {/* Contact Info Cards */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-                Contact Information
-              </h2>
-              
-              {contactInfo.map((info, index) => (
-                <motion.div
-                  key={info.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  onHoverStart={() => setHoveredContact(index)}
-                  onHoverEnd={() => setHoveredContact(null)}
-                  className="card hover:shadow-xl transition-all duration-300 cursor-pointer group"
-                >
-                  <div className="flex items-start space-x-4">
-                    <motion.div 
-                      className={`w-12 h-12 bg-gradient-to-br ${info.color} rounded-lg flex items-center justify-center flex-shrink-0 text-white`}
-                      animate={{ 
-                        scale: hoveredContact === index ? 1.2 : 1,
-                        rotate: hoveredContact === index ? 360 : 0
-                      }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {info.icon === 'Instagram' ? (
-                        <Instagram className="w-6 h-6" />
-                      ) : (
-                        <info.icon className="w-6 h-6" />
-                      )}
-                    </motion.div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {info.title}
-                      </h3>
-                      <div className="flex items-center space-x-2">
-                        {info.link ? (
-                          <a
-                            href={info.link}
-                            className="text-gray-600 hover:text-primary-600 transition-colors duration-200 flex items-center group"
-                          >
-                            {info.content}
-                            <ExternalLink className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </a>
-                        ) : (
-                          <span className="text-gray-600">{info.content}</span>
-                        )}
-                        <motion.button
-                          onClick={() => handleCopy(info.content, info.title)}
-                          className="p-1 hover:bg-gray-100 rounded transition-colors"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          {copiedField === info.title ? (
-                            <Check className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Copy className="w-4 h-4 text-gray-400" />
-                          )}
-                        </motion.button>
-                      </div>
-                      <motion.p
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ 
-                          opacity: hoveredContact === index ? 1 : 0,
-                          height: hoveredContact === index ? 'auto' : 0
-                        }}
-                        className="text-sm text-gray-500 mt-2"
-                      >
-                        {info.description}
-                      </motion.p>
-                    </div>
+      {/* Why Choose Us - full width below grid */}
+      <div className="max-w-5xl mx-auto mb-10">
+        <div className="card">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Why Choose Us?
+          </h3>
+          <div className="relative h-32 overflow-hidden rounded-lg">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentFeature}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.5 }}
+                className={`absolute inset-0 bg-gradient-to-br ${features[currentFeature].color} text-white p-6 flex items-center`}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                    {features[currentFeature].icon}
                   </div>
-                </motion.div>
+                  <div>
+                    <h4 className="text-lg font-semibold mb-1">
+                      {features[currentFeature].title}
+                    </h4>
+                    <p className="text-white/90 text-sm">
+                      {features[currentFeature].description}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+            {/* Feature indicators */}
+            <div className="absolute bottom-4 right-4 flex space-x-2">
+              {features.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentFeature(idx)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    idx === currentFeature ? 'bg-white' : 'bg-white/30'
+                  }`}
+                />
               ))}
             </div>
-
-            {/* Features Showcase */}
-            <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Why Choose Us?
-              </h3>
-              <div className="relative h-32 overflow-hidden rounded-lg">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentFeature}
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    transition={{ duration: 0.5 }}
-                    className={`absolute inset-0 bg-gradient-to-br ${features[currentFeature].color} text-white p-6 flex items-center`}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                        {features[currentFeature].icon}
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-semibold mb-1">
-                          {features[currentFeature].title}
-                        </h4>
-                        <p className="text-white/90 text-sm">
-                          {features[currentFeature].description}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-                
-                {/* Feature indicators */}
-                <div className="absolute bottom-4 right-4 flex space-x-2">
-                  {features.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentFeature(idx)}
-                      className={`w-2 h-2 rounded-full transition-colors ${
-                        idx === currentFeature ? 'bg-white' : 'bg-white/30'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Location Map */}
-            <motion.div 
-              className="card"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2 }}
-            >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-primary-600" />
-                Our Location
-              </h3>
-              <a 
-                href="https://maps.app.goo.gl/6vpaxtKNA4ErmL2b6" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <div className="relative overflow-hidden rounded-lg h-64 group cursor-pointer">
-                  {/* Location Image */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                    <div className="text-center text-white relative z-10">
-                      <MapPin className="w-16 h-16 mx-auto mb-4 text-white/80" />
-                      <h4 className="text-xl font-bold mb-2">The Study Point Library</h4>
-                      <p className="text-lg mb-1">Jiran, Neemuch District</p>
-                      <p className="text-sm text-white/80">Madhya Pradesh, India</p>
-                      <div className="mt-4 flex items-center justify-center space-x-2">
-                        <ExternalLink className="w-4 h-4" />
-                        <span className="text-sm">View on Google Maps</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Hover overlay */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    className="absolute inset-0 bg-black/20 flex items-center justify-center"
-                  >
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 text-center">
-                      <MapPin className="w-8 h-8 mx-auto mb-2 text-primary-600" />
-                      <p className="font-semibold text-gray-900">Click to open map</p>
-                      <p className="text-sm text-gray-600">Get directions to our location</p>
-                    </div>
-                  </motion.div>
-                </div>
-              </a>
-              
-              {/* Address Details */}
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
-                  <MapPin className="w-4 h-4 mr-2 text-primary-600" />
-                  Complete Address
-                </h4>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  The Study Point Library<br />
-                  Jiran, Neemuch District<br />
-                  Madhya Pradesh, India<br />
-                  <span className="text-primary-600 font-medium">Pin Code: 458441</span>
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
+          </div>
         </div>
+      </div>
 
-        {/* FAQ Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-20"
+      {/* Our Location - full width below Why Choose Us */}
+      <div className="max-w-5xl mx-auto mb-16">
+        <motion.div 
+          className="card"
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.2 }}
         >
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xl text-gray-600">
-              Find answers to common questions about our study room services.
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <MapPin className="w-5 h-5 mr-2 text-primary-600" />
+            Our Location
+          </h3>
+          <a 
+            href="https://maps.app.goo.gl/6vpaxtKNA4ErmL2b6" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div className="relative overflow-hidden rounded-lg h-64 group cursor-pointer">
+              {/* Location Image */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                <div className="text-center text-white relative z-10">
+                  <MapPin className="w-16 h-16 mx-auto mb-4 text-white/80" />
+                  <h4 className="text-xl font-bold mb-2">The Study Point Library</h4>
+                  <p className="text-lg mb-1">Jiran, Neemuch District</p>
+                  <p className="text-sm text-white/80">Madhya Pradesh, India</p>
+                  <div className="mt-4 flex items-center justify-center space-x-2">
+                    <ExternalLink className="w-4 h-4" />
+                    <span className="text-sm">View on Google Maps</span>
+                  </div>
+                </div>
+              </div>
+              {/* Hover overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileHover={{ opacity: 1 }}
+                className="absolute inset-0 bg-black/20 flex items-center justify-center"
+              >
+                <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 text-center">
+                  <MapPin className="w-8 h-8 mx-auto mb-2 text-primary-600" />
+                  <p className="font-semibold text-gray-900">Click to open map</p>
+                  <p className="text-sm text-gray-600">Get directions to our location</p>
+                </div>
+              </motion.div>
+            </div>
+          </a>
+          {/* Address Details */}
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+              <MapPin className="w-4 h-4 mr-2 text-primary-600" />
+              Complete Address
+            </h4>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              The Study Point Library<br />
+              Jiran, Neemuch District<br />
+              Madhya Pradesh, India<br />
+              <span className="text-primary-600 font-medium">Pin Code: 458441</span>
             </p>
           </div>
+        </motion.div>
+      </div>
 
-          <div className="max-w-4xl mx-auto space-y-4">
-            {faqs.map((faq, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="card hover:shadow-lg transition-all duration-300"
+      {/* Instagram - truly full width below Our Location */}
+      <div className="w-full bg-gradient-to-r from-pink-50 to-pink-100 py-8 mb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="card flex flex-col md:flex-row items-center gap-8 p-8 w-full">
+            <div className="flex-1 flex flex-col items-center md:items-start">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
+                <Instagram className="w-5 h-5 mr-2 text-pink-500" />
+                Follow Us on Instagram
+              </h3>
+              <a
+                href="https://www.instagram.com/the_study_point_library_jeeran?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-5 py-2 bg-pink-500 text-white rounded-lg font-semibold shadow hover:bg-pink-600 transition-colors text-lg mt-2 mb-4"
               >
-                <button
-                  onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                  className="w-full text-left flex items-center justify-between p-6 focus:outline-none"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900 pr-4">
-                    {faq.question}
-                  </h3>
-                  <motion.div
-                    animate={{ rotate: expandedFaq === index ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {expandedFaq === index ? (
-                      <ChevronUp className="w-5 h-5 text-primary-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
-                    )}
-                  </motion.div>
-                </button>
-                
-                <AnimatePresence>
-                  {expandedFaq === index && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="px-6 pb-6"
-                    >
-                      <div className="border-t border-gray-200 pt-4">
-                        <p className="text-gray-600 leading-relaxed">
-                          {faq.answer}
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
+                @the_study_point_library_jeeran
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </a>
+              <p className="text-gray-600 text-sm max-w-md">
+                See our latest updates, photos, and community moments. Join our growing online family!
+              </p>
+            </div>
+            <div className="flex-1 flex justify-center">
+              <a
+                href="https://www.instagram.com/the_study_point_library_jeeran?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-lg overflow-hidden shadow-lg hover:scale-105 transition-transform"
+              >
+                <img
+                  src="/images/insta-preview.png"
+                  alt="Instagram Preview"
+                  className="w-80 h-48 object-cover rounded-lg border-2 border-pink-200"
+                />
+              </a>
+            </div>
           </div>
-        </motion.section>
+        </div>
+      </div>
 
         {/* CTA Section */}
         <motion.section
@@ -707,7 +737,6 @@ This message was sent from The Study Point Library Jiran contact form.
             </div>
           </div>
         </motion.section>
-      </div>
     </div>
   )
 }
