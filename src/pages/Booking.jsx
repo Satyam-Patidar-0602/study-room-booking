@@ -32,6 +32,18 @@ import {
 import toast from 'react-hot-toast'
 import { bookingAPI, apiUtils } from '../services/api'
 
+// Helper to dynamically load Cashfree SDK
+function loadCashfreeScript(callback) {
+  if (window.Cashfree && typeof window.Cashfree.checkout === "function") {
+    callback();
+    return;
+  }
+  const script = document.createElement('script');
+  script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+  script.onload = callback;
+  document.body.appendChild(script);
+}
+
 const Booking = () => {
   const navigate = useNavigate()
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -188,6 +200,90 @@ const Booking = () => {
       await handleBooking()
     }
   }
+
+  const handlePayment = async () => {
+    // Log booking data before sending
+    console.log('Sending to backend:', {
+      customerName: bookingData.name,
+      customerEmail: bookingData.email,
+      customerPhone: bookingData.phone,
+      duration: bookingData.duration,
+      subscriptionPeriod: bookingData.subscriptionPeriod
+    });
+
+    // Validate duration and subscriptionPeriod
+    if (!bookingData.duration || !['full', '4'].includes(bookingData.duration)) {
+      toast.error('Please select a valid duration.');
+      return;
+    }
+    if (!bookingData.subscriptionPeriod || !['1', '0.5'].includes(bookingData.subscriptionPeriod)) {
+      toast.error('Please select a valid subscription period.');
+      return;
+    }
+
+    // 1. Create order on backend
+    const response = await fetch('http://localhost:3001/api/cashfree/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerName: bookingData.name,
+        customerEmail: bookingData.email,
+        customerPhone: bookingData.phone,
+        duration: bookingData.duration,
+        subscriptionPeriod: bookingData.subscriptionPeriod
+      })
+    });
+    const data = await response.json();
+    if (!data.success) {
+      toast.error('Failed to create payment order');
+      return;
+    }
+
+    // 2. Launch Razorpay Checkout
+    // const options = {
+    //   key: data.order.key_id,
+    //   amount: data.order.amount,
+    //   currency: data.order.currency,
+    //   name: 'The Study Point Library Jiran',
+    //   description: 'Seat Booking Payment',
+    //   order_id: data.order.id,
+    //   handler: function (response) {
+    //     toast.success('Payment successful! Payment ID: ' + response.razorpay_payment_id);
+    //     // Optionally, call your backend to verify payment and complete booking
+    //   },
+    //   prefill: {
+    //     name: data.order.customerName,
+    //     email: data.order.customerEmail,
+    //     contact: data.order.customerPhone
+    //   },
+    //   theme: {
+    //     color: '#6366f1'
+    //   }
+    // };
+    // const rzp = new window.Razorpay(options);
+    // rzp.open();
+
+    // Launch Cashfree Checkout
+    loadCashfreeScript(() => {
+      if (window.Cashfree && window.Cashfree.checkout) {
+        window.Cashfree.checkout({
+          orderToken: data.order.order_token || data.order.order_token,
+          onSuccess: function(data) {
+            toast.success('Payment successful!');
+            // Optionally, call your backend to verify payment and complete booking
+          },
+          onFailure: function(data) {
+            toast.error('Payment failed!');
+          },
+          onError: function(data) {
+            toast.error('Payment error!');
+          }
+        });
+      } else {
+        toast.error('Cashfree SDK failed to load.');
+      }
+    });
+  };
 
   const handleBooking = async () => {
     setIsLoading(true)
@@ -891,34 +987,48 @@ const Booking = () => {
                     <span>Back</span>
                   </motion.button>
                 )}
-                <motion.button
-                  onClick={handleNextStep}
-                  disabled={isLoading}
-                  className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      {currentStep === 1 ? (
-                        <>
-                          <span>Continue</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Confirm Booking</span>
-                        </>
-                      )}
-                    </>
-                  )}
-                </motion.button>
+                {currentStep === 1 && (
+                  <motion.button
+                    onClick={handleNextStep}
+                    disabled={isLoading}
+                    className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Continue</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </motion.button>
+                )}
+                {currentStep === 2 && (
+                  <motion.button
+                    onClick={handlePayment}
+                    disabled={isLoading || (durationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'user' && selectedSeats.length === 0)}
+                    className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Pay Now</span>
+                      </>
+                    )}
+                  </motion.button>
+                )}
               </div>
 
               {/* Features Showcase */}
@@ -982,6 +1092,16 @@ const Booking = () => {
               </div>
             </motion.div>
           </div>
+        </div>
+      </div>
+      {/* Policy Links Bar */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 border-t border-gray-200 pt-6">
+          <a href="/terms" className="hover:text-primary-600 underline">Terms & Conditions</a>
+          <span>|</span>
+          <a href="/refund-policy" className="hover:text-primary-600 underline">Refund Policy</a>
+          <span>|</span>
+          <a href="/contact-us" className="hover:text-primary-600 underline">Contact Us</a>
         </div>
       </div>
     </div>
