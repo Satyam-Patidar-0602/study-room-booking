@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const bookingsRouter = require('./routes/bookings');
 const uploadRoutes = require('./routes/upload');
+const cashfreeRoutes = require('./routes/cashfree');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -57,6 +58,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/bookings', bookingsRouter);
 app.use('/api', uploadRoutes);
+app.use('/api/cashfree', cashfreeRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

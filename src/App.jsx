@@ -9,6 +9,9 @@ import Contact from './pages/Contact'
 import BookingSuccess from './pages/BookingSuccess'
 import News from './pages/News'
 import StudentResources from './pages/StudentResources'
+import Terms from './pages/Terms';
+import RefundPolicy from './pages/RefundPolicy';
+import ContactUs from './pages/ContactUs';
 
 function App() {
   return (
@@ -92,6 +95,45 @@ function App() {
                   transition={{ duration: 0.3 }}
                 >
                   <StudentResources />
+                </motion.div>
+              } 
+            />
+            <Route 
+              path="/terms" 
+              element={
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Terms />
+                </motion.div>
+              } 
+            />
+            <Route 
+              path="/refund-policy" 
+              element={
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <RefundPolicy />
+                </motion.div>
+              } 
+            />
+            <Route 
+              path="/contact-us" 
+              element={
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ContactUs />
                 </motion.div>
               } 
             />
