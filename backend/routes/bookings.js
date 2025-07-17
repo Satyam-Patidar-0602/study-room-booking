@@ -292,6 +292,28 @@ router.patch('/:id/payment', async (req, res) => {
   }
 });
 
+// Assign or update seat for a booking (admin)
+router.patch('/:id/assign-seat', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { seatNumber } = req.body;
+    if (!seatNumber) {
+      return res.status(400).json({ success: false, error: 'seatNumber is required' });
+    }
+    // Get seat id from seat number
+    const seat = await getRow('SELECT id FROM seats WHERE seat_number = ?', [seatNumber]);
+    if (!seat) {
+      return res.status(400).json({ success: false, error: 'Seat does not exist' });
+    }
+    // Update booking
+    await runQuery('UPDATE bookings SET seat_id = ? WHERE id = ?', [seat.id, id]);
+    res.json({ success: true, data: { message: 'Seat assigned/updated successfully' } });
+  } catch (error) {
+    console.error('Error assigning seat:', error);
+    res.status(500).json({ success: false, error: 'Failed to assign seat' });
+  }
+});
+
 // Get booking statistics
 router.get('/stats', async (req, res) => {
   try {

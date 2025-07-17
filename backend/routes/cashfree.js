@@ -1,10 +1,16 @@
 const express = require('express');
 const router = express.Router();
-// const Razorpay = require('razorpay');
-require('dotenv').config(); // Load environment variables from .env
+require('dotenv').config();
 
-// Cashfree integration
-const axios = require('axios');
+// Use the official Cashfree PG Node SDK
+const { Cashfree } = require('cashfree-pg');
+
+// Determine environment
+const CF_ENV = process.env.CASHFREE_ENV === 'PROD' ? Cashfree.PRODUCTION : Cashfree.SANDBOX;
+const CF_APP_ID = process.env.CASHFREE_APP_ID;
+const CF_SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
+
+const cashfree = new Cashfree(CF_ENV, CF_APP_ID, CF_SECRET_KEY);
 
 router.post('/create-order', async (req, res) => {
   const { customerName, customerEmail, customerPhone, duration, subscriptionPeriod } = req.body;
@@ -26,37 +32,38 @@ router.post('/create-order', async (req, res) => {
   }
 
   try {
-    // Create Cashfree order
-    const cashfreeRes = await axios.post(
-      'https://sandbox.cashfree.com/pg/orders',
-      {
-        order_id: orderId,
-        order_amount: orderAmount,
-        order_currency: 'INR',
-        customer_details: {
-          customer_id: customerEmail,
-          customer_email: customerEmail,
-          customer_phone: customerPhone,
-          customer_name: customerName
-        }
+    const request = {
+      order_id: orderId,
+      order_amount: orderAmount,
+      order_currency: 'INR',
+      customer_details: {
+        customer_id: customerPhone, // must be alphanumeric, phone is safe
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        customer_name: customerName
       },
-      {
-        headers: {
-          'x-client-id': process.env.CASHFREE_APP_ID,
-          'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-          'x-api-version': '2022-09-01',
-          'Content-Type': 'application/json'
-        }
+      order_meta: {
+        return_url: 'https://yourdomain.com/booking-success?order_id={order_id}'
       }
-    );
-    const order = cashfreeRes.data;
-    res.json({ success: true, order });
+    };
+    const cfRes = await cashfree.PGCreateOrder(request);
+    console.log('Cashfree SDK response:', cfRes.data);
+    const payment_session_id = cfRes.data.payment_session_id;
+    res.json({ success: true, order: { ...cfRes.data, payment_session_id } });
   } catch (err) {
-    console.error('Cashfree order error:', err.response?.data || err);
-    res.status(500).json({
-      success: false,
-      error: err.message || err,
-    });
+    console.error('Cashfree SDK error:', err.response?.data || err);
+    if (err.response) {
+      res.status(500).json({
+        success: false,
+        error: err.message || err,
+        cashfreeError: err.response.data
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: err.message || err
+      });
+    }
   }
 });
 

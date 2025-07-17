@@ -167,6 +167,7 @@ const BookingSuccess = () => {
                 <div>
                   <h2 className="text-lg font-bold">STUDY POINT LIBRARY</h2>
                   <p className="text-xs opacity-90">JIRAN - BOOKING ID CARD</p>
+                  <p className="text-xs opacity-90">Contact: thestudypointlibraryjeeran@gmail.com</p>
                 </div>
               </div>
               <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
