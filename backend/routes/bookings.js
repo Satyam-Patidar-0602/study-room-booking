@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { runQuery, getRow, getAll, runTransaction } = require('../database');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 // Get all bookings
 router.get('/', async (req, res) => {
@@ -13,7 +15,6 @@ router.get('/', async (req, res) => {
         b.duration_type,
         b.subscription_period,
         b.total_amount,
-        b.status,
         b.payment_status,
         b.created_at,
         u.name as user_name,
@@ -68,22 +69,65 @@ router.get('/date/:date', async (req, res) => {
   }
 });
 
-// Get booked seats for a specific date
+// Get booked seats for a specific date (consider full subscription period)
 router.get('/booked-seats/:date', async (req, res) => {
   try {
-    const { date } = req.params;
+    let { date } = req.params;
+    // Ensure date is in YYYY-MM-DD format
+    if (date.includes('T')) {
+      date = date.split('T')[0];
+    }
     const query = `
       SELECT 
         s.seat_number,
+        b.start_date,
+        b.subscription_period,
         b.start_time,
         b.duration_type,
-        b.subscription_period
+        date(b.start_date, '+' || (CASE WHEN b.subscription_period = '0.5' THEN 15 ELSE 30 END) || ' days') as expiry_date
       FROM bookings b
       JOIN seats s ON b.seat_id = s.id
-      WHERE b.start_date = ? AND b.status = 'active'
+      WHERE b.status = 'active'
+        AND b.seat_id IS NOT NULL
+        AND b.duration_type = 'fulltime'
+        AND date(?) BETWEEN date(b.start_date) AND date(b.start_date, '+' || 
+          (CASE WHEN b.subscription_period = '0.5' THEN 15 ELSE 30 END) || ' days')
     `;
-    
     const bookedSeats = await getAll(query, [date]);
+    res.json({ success: true, data: bookedSeats });
+  } catch (error) {
+    console.error('Error fetching booked seats:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch booked seats' });
+  }
+});
+
+// Get booked seats for the next three days (aaj, kal, parso) for fulltime bookings
+router.get('/booked-seats-next-three', async (req, res) => {
+  try {
+    // Get next three dates as yyyy-MM-dd
+    const today = new Date();
+    const dates = [0, 1, 2].map(i => {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      return d.toISOString().split('T')[0];
+    });
+
+    const query = `
+      SELECT 
+        s.seat_number,
+        b.start_date,
+        b.subscription_period,
+        b.start_time,
+        b.duration_type,
+        date(b.start_date, '+' || (CASE WHEN b.subscription_period = '0.5' THEN 15 ELSE 30 END) || ' days') as expiry_date
+      FROM bookings b
+      JOIN seats s ON b.seat_id = s.id
+      WHERE b.status = 'active'
+        AND b.seat_id IS NOT NULL
+        AND b.duration_type = 'fulltime'
+        AND b.start_date IN (?, ?, ?)
+    `;
+    const bookedSeats = await getAll(query, dates);
     res.json({ success: true, data: bookedSeats });
   } catch (error) {
     console.error('Error fetching booked seats:', error);
@@ -165,11 +209,11 @@ router.post('/', async (req, res) => {
     if (durationType === '4hours') {
       const bookingResult = await runQuery(
         `INSERT INTO bookings 
-         (user_id, start_date, start_time, duration_type, subscription_period, total_amount) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [userId, startDate, startTime, durationType, subscriptionPeriod, totalAmount]
+         (user_id, start_date, start_time, duration_type, subscription_period, total_amount, payment_status) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userId, startDate, startTime, durationType, subscriptionPeriod, totalAmount, 'paid']
       );
-
+      // Log booking insert
       res.json({
         success: true,
         data: {
@@ -214,20 +258,22 @@ router.post('/', async (req, res) => {
       const bookingQueries = selectedSeats.map(seatNumber => ({
         query: `
           INSERT INTO bookings 
-          (user_id, seat_id, start_date, start_time, duration_type, subscription_period, total_amount) 
-          VALUES (?, (SELECT id FROM seats WHERE seat_number = ?), ?, ?, ?, ?, ?)
-        `,
-        params: [userId, seatNumber, startDate, startTime, durationType, subscriptionPeriod, totalAmount]
+          (user_id, seat_id, start_date, start_time, duration_type, subscription_period, total_amount, payment_status) 
+          VALUES (?, (SELECT id FROM seats WHERE seat_number = ?), ?, ?, ?, ?, ?, ?)`,
+        params: [userId, seatNumber, startDate, startTime, durationType, subscriptionPeriod, totalAmount, 'paid']
       }));
 
       const results = await runTransaction(bookingQueries);
 
-      res.json({
-        success: true,
-        data: {
-          bookingIds: results.map(r => r.id),
-          message: 'Bookings created successfully'
-        }
+      // Log each booking inserted
+      selectedSeats.forEach((seatNumber, idx) => {
+        res.json({
+          success: true,
+          data: {
+            bookingIds: results.map(r => r.id),
+            message: 'Bookings created successfully'
+          }
+        });
       });
     }
   } catch (error) {
@@ -307,6 +353,54 @@ router.patch('/:id/assign-seat', async (req, res) => {
     }
     // Update booking
     await runQuery('UPDATE bookings SET seat_id = ? WHERE id = ?', [seat.id, id]);
+
+    // Fetch booking and user info for email
+    const booking = await getRow(`
+      SELECT b.start_date, b.start_time, b.duration_type, b.subscription_period, u.name, u.email, u.phone, s.seat_number
+      FROM bookings b
+      JOIN users u ON b.user_id = u.id
+      LEFT JOIN seats s ON b.seat_id = s.id
+      WHERE b.id = ?
+    `, [id]);
+
+    // Send email notification
+    if (booking && booking.email) {
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+      const mailOptions = {
+        from: `Study Point Library <${process.env.SMTP_USER}>`,
+        to: booking.email,
+        subject: `Your Study Point Library Seat Assignment for ${booking.start_date}`,
+        text:
+          `Dear ${booking.name},\n\n` +
+          `Your seat has been assigned for your booking at Study Point Library Jiran.\n\n` +
+          `Booking Details:\n` +
+          `Date: ${booking.start_date}\n` +
+          `Time: ${booking.start_time || 'N/A'}\n` +
+          `Duration: ${booking.duration_type === '4hours' ? 'Morning/Evening (4 Hours)' : 'Full Time'}\n` +
+          `Subscription: ${booking.subscription_period === '0.5' ? '15 Days' : '1 Month'}\n` +
+          `Assigned Seat: ${seatNumber}\n\n` +
+          `If you have any questions, contact us at thestudypointlibraryjeeran@gmail.com.\n\n` +
+          `Thank you for choosing Study Point Library Jiran.\n\n` +
+          `Best regards,\n` +
+          `Study Point Library Jiran\n` +
+          `Jiran, Neemuch District, Madhya Pradesh\n` +
+          `Contact: thestudypointlibraryjeeran@gmail.com\n`
+      };
+      try {
+        await transporter.sendMail(mailOptions);
+      } catch (err) {
+        console.error('Failed to send seat assignment email:', err.message);
+      }
+    }
+
     res.json({ success: true, data: { message: 'Seat assigned/updated successfully' } });
   } catch (error) {
     console.error('Error assigning seat:', error);

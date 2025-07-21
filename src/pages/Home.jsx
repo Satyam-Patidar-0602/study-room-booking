@@ -89,23 +89,23 @@ const features = [
 
 const testimonials = [
   {
-    name: "Jayesh Bhoot",
-    role: "Founder & Mechanical Engineer",
-    text: "Mechanical Engineer at Rajkot.",
+    name: "Abhivyakt Patidar",
+    role: "JEE Aspirant",
+    text: "The Study Point Library is the best place for focused study. The environment is peaceful and the WiFi is super fast!",
     rating: 5,
     avatar: "/images/owner1.jpg"
   },
   {
-    name: "Sunil Mukhadham",
-    role: "Founder & Operations Manager",
-    text: "We ensure smooth operations and excellent customer service for every student who walks through our doors.",
+    name: "Vishal Rathore",
+    role: "Banking Exam Aspirant",
+    text: "The library's disciplined environment and extended hours helped me prepare for my banking exams without any distractions. Highly recommended for all competitive exam aspirants!",
     rating: 5,
     avatar: "/images/owner2.jpg"
   },
   {
-    name: "Rakesh Bhoot",
-    role: "Founder & AVFO",
-    text: "Government official at Buda, dedicated to community development and education.",
+    name: "Sushil Mali",
+    role: "Aspirant",
+    text: "I love the quiet zone and the resources available here. Highly recommended for any serious student!",
     rating: 5,
     avatar: "/images/owner3.jpg"
   }
@@ -429,10 +429,10 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              What Our Students Say
+              What Our Students Say About Us
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Don't just take our word for it - hear from our satisfied students
+              Hear directly from our students and their real experiences at Study Point Library Jiran.
             </p>
           </motion.div>
 
@@ -465,11 +465,6 @@ export default function Home() {
                   </blockquote>
                   
                   <div className="flex items-center justify-center space-x-4">
-                    <img
-                      src={testimonials[currentTestimonial].avatar}
-                      alt={testimonials[currentTestimonial].name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
                     <div className="text-left">
                       <div className="font-semibold text-gray-900">
                         {testimonials[currentTestimonial].name}

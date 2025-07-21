@@ -25,7 +25,6 @@ import {
 import { downloadStudyMaterial } from '../utils/pdfGenerator'
 
 const StudentResources = () => {
-  console.log('StudentResources component loaded') // Debug log
   
   const [activeTab, setActiveTab] = useState('mocktest')
   const [searchTerm, setSearchTerm] = useState('')

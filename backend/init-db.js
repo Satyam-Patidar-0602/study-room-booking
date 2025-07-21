@@ -9,7 +9,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error opening database:', err.message);
   } else {
-    console.log('Connected to the SQLite database.');
+    // console.log('Connected to the SQLite database.');
   }
 });
 
@@ -32,7 +32,7 @@ const createTables = () => {
     if (err) {
       console.error('Error creating users table:', err.message);
     } else {
-      console.log('Users table created successfully.');
+      // console.log('Users table created successfully.');
     }
   });
 
@@ -49,7 +49,7 @@ const createTables = () => {
     if (err) {
       console.error('Error creating seats table:', err.message);
     } else {
-      console.log('Seats table created successfully.');
+      // console.log('Seats table created successfully.');
     }
   });
 
@@ -75,7 +75,24 @@ const createTables = () => {
     if (err) {
       console.error('Error creating bookings table:', err.message);
     } else {
-      console.log('Bookings table created successfully.');
+      // console.log('Bookings table created successfully.');
+    }
+  });
+
+  // Expenses table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      amount DECIMAL(10,2) NOT NULL,
+      description TEXT NOT NULL,
+      admin_name TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating expenses table:', err.message);
+    } else {
+      // console.log('Expenses table created successfully.');
     }
   });
 
@@ -103,7 +120,7 @@ const createTables = () => {
       if (err) {
         console.error('Error finalizing seat insertions:', err.message);
       } else {
-        console.log('Default seats inserted successfully.');
+        // console.log('Default seats inserted successfully.');
       }
     });
   };
@@ -148,7 +165,7 @@ const createTables = () => {
       if (err) {
         console.error('Error creating sample user:', err.message);
       } else {
-        console.log('Sample user created successfully.');
+        // console.log('Sample user created successfully.');
         
         // Now insert sample bookings
         const stmt = db.prepare(`
@@ -169,7 +186,7 @@ const createTables = () => {
           if (err) {
             console.error('Error finalizing sample booking insertions:', err.message);
           } else {
-            console.log('Sample bookings inserted successfully.');
+            // console.log('Sample bookings inserted successfully.');
           }
         });
       }
@@ -182,12 +199,12 @@ const createTables = () => {
     setTimeout(() => {
       insertSampleBookings();
       setTimeout(() => {
-        console.log('Database initialization completed successfully!');
+        // console.log('Database initialization completed successfully!');
         db.close((err) => {
           if (err) {
             console.error('Error closing database:', err.message);
           } else {
-            console.log('Database connection closed.');
+            // console.log('Database connection closed.');
           }
         });
       }, 1000);

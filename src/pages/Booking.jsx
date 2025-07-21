@@ -57,7 +57,7 @@ const Booking = () => {
   // Subscription periods
   const subscriptionPeriods = [
     { value: '1', label: '1 Month', price: 600 },
-    { value: '0.5', label: '15 Days', price: 350 }
+    { value: '0.5', label: '15 Days', price: 300 }
   ]
 
   // Duration options
@@ -103,47 +103,105 @@ const Booking = () => {
     return () => clearInterval(interval)
   }, [features.length])
 
-  // Fetch booked seats from database
+  // Fetch booked seats for the next three days (aaj, kal, parso) only once on mount
   useEffect(() => {
     const fetchBookedSeats = async () => {
       try {
-        const dateStr = apiUtils.formatDateForAPI(selectedDate)
-        const response = await bookingAPI.getBookedSeats(dateStr)
-        
-        if (response.success) {
-          // Transform API data to match the expected format
-          const transformedBookings = response.data.map(booking => ({
+        const response = await fetch('/api/bookings/booked-seats-next-three');
+        const data = await response.json();
+        if (data.success) {
+          // Transform as before
+          const transformedBookings = data.data.map(booking => ({
             seatId: booking.seat_number,
-            date: format(selectedDate, 'yyyy-MM-dd'), // Use the selected date
+            start_date: booking.start_date,
+            subscription_period: booking.subscription_period,
             time: booking.start_time,
-            duration: booking.subscription_period
-          }))
-          setBookedSeats(transformedBookings)
+            expiry_date: booking.expiry_date,
+            duration_type: booking.duration_type
+          }));
+          setBookedSeats(transformedBookings);
         }
       } catch (error) {
-        console.error('Error fetching booked seats:', error)
-        toast.error('Failed to load seat availability')
+        console.error('Error fetching booked seats:', error);
+        toast.error('Failed to load seat availability');
       }
+    };
+    fetchBookedSeats();
+  }, []); // No selectedDate dependency!
+
+  // Helper to get the next three dates (today, tomorrow, day after tomorrow)
+  const getNextThreeDates = () => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const dates = [new Date(today)];
+    for (let i = 1; i <= 2; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      dates.push(d);
     }
+    return dates;
+  };
+  const nextThreeDates = getNextThreeDates();
+  const minDate = format(nextThreeDates[0], 'yyyy-MM-dd');
+  const maxDate = format(nextThreeDates[2], 'yyyy-MM-dd');
 
-    fetchBookedSeats()
-  }, [selectedDate])
+  // Helper to check if a date is one of the next three days
+  const isAllowedBookingDate = (date) => {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    return nextThreeDates.some(nd => nd.getTime() === d.getTime());
+  };
 
+  // Disable seat for all three days if its fulltime booking starts on aaj, kal, or parso
+  const isFullTimeSeatBooked = (seatId) => {
+    // Get all start_dates for fulltime bookings for this seat
+    const startDates = bookedSeats
+      .filter(booking => booking.seatId === seatId && booking.duration_type === 'fulltime')
+      .map(booking => booking.start_date);
+
+    // Get all next three dates as yyyy-MM-dd
+    const nextThree = [0, 1, 2].map(i => {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      return format(d, 'yyyy-MM-dd');
+    });
+
+    // If any start_date matches aaj, kal, parso, disable seat for all three days
+    return startDates.some(date => nextThree.includes(date));
+  };
+
+  // Helper: For a given seat, check if it is booked for the selected date (from start to expiry)
   const isSeatBooked = (seatId) => {
-    return bookedSeats.some(
-      booking => 
-        booking.seatId === seatId && 
-        booking.date === format(selectedDate, 'yyyy-MM-dd')
-    )
-  }
+    return bookedSeats.some(booking => {
+      if (booking.seatId !== seatId) return false;
+      const start = new Date(booking.start_date);
+      start.setHours(0,0,0,0);
+      const expiry = new Date(booking.expiry_date);
+      expiry.setHours(0,0,0,0);
+      const selected = new Date(selectedDate);
+      selected.setHours(0,0,0,0);
+      return selected >= start && selected <= expiry;
+    });
+  };
+
+  // Calendar UI: allow selection of any date (except past), but visually highlight today, tomorrow, and day after tomorrow
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const dayAfterTomorrow = new Date(today); dayAfterTomorrow.setDate(today.getDate() + 2);
+  const isHighlightedDate = (date) => {
+    const d = new Date(date); d.setHours(0,0,0,0);
+    return (
+      d.getTime() === today.getTime() ||
+      d.getTime() === tomorrow.getTime() ||
+      d.getTime() === dayAfterTomorrow.getTime()
+    );
+  };
 
   const getBookedSeatInfo = (seatId) => {
-    const booking = bookedSeats.find(
-      booking => 
-        booking.seatId === seatId && 
-        booking.date === format(selectedDate, 'yyyy-MM-dd')
+    return bookedSeats.find(
+      booking => booking.seatId === seatId
     )
-    return booking
   }
 
   const getBookingEndDate = (startDate, duration) => {
@@ -194,14 +252,6 @@ const Booking = () => {
 
   const handlePayment = async () => {
     // Log booking data before sending
-    console.log('Sending to backend:', {
-      customerName: bookingData.name,
-      customerEmail: bookingData.email,
-      customerPhone: bookingData.phone,
-      duration: bookingData.duration,
-      subscriptionPeriod: bookingData.subscriptionPeriod
-    });
-
     // Validate duration and subscriptionPeriod
     if (!bookingData.duration || !['full', '4'].includes(bookingData.duration)) {
       toast.error('Please select a valid duration.');
@@ -213,16 +263,18 @@ const Booking = () => {
     }
 
     // 1. Create order on backend
-    const response = await fetch('http://localhost:3001/api/cashfree/create-order', {
+    const orderPayload = {
+      customerName: bookingData.name,
+      customerEmail: bookingData.email,
+      customerPhone: bookingData.phone,
+      duration: bookingData.duration,
+      subscriptionPeriod: bookingData.subscriptionPeriod,
+      selectedSeats: bookingData.duration === 'full' ? selectedSeats : []
+    };
+            const response = await fetch('/api/cashfree/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customerName: bookingData.name,
-        customerEmail: bookingData.email,
-        customerPhone: bookingData.phone,
-        duration: bookingData.duration,
-        subscriptionPeriod: bookingData.subscriptionPeriod
-      })
+      body: JSON.stringify(orderPayload)
     });
     const data = await response.json();
     if (!data.success) {
@@ -242,12 +294,32 @@ const Booking = () => {
           // navigate('/booking-failure', { state: { error: result.error } });
         } else if (result.paymentDetails) {
           toast.success('Payment completed!');
-          // Pass booking/payment details to the success page
+          // Save booking in DB
+          const bookingDataForAPI = {
+            name: bookingData.name,
+            email: bookingData.email,
+            phone: bookingData.phone,
+            startDate: apiUtils.formatDateForAPI(selectedDate),
+            startTime: selectedTime || '09:00',
+            durationType: bookingData.duration === '4' ? '4hours' : 'fulltime',
+            subscriptionPeriod: bookingData.subscriptionPeriod,
+            selectedSeats: bookingData.duration === 'full' ? selectedSeats : [],
+            totalAmount: calculateTotal()
+          };
+          bookingAPI.createBooking(bookingDataForAPI);
+          // Now navigate to success page
           navigate('/booking-success', {
             state: {
               bookingDetails: {
-                ...bookingData,
-                paymentDetails: result.paymentDetails,
+                name: bookingData.name,
+                email: bookingData.email,
+                phone: bookingData.phone,
+                seats: selectedSeats,
+                date: selectedDate,
+                duration: bookingData.duration,
+                subscriptionPeriod: bookingData.subscriptionPeriod,
+                totalAmount: calculateTotal(),
+                paymentDetails: result.paymentDetails
               }
             }
           });
@@ -289,7 +361,7 @@ const Booking = () => {
         startTime: selectedTime || '09:00', // Default time if not selected
         durationType: bookingData.duration === '4' ? '4hours' : 'fulltime',
         subscriptionPeriod: bookingData.subscriptionPeriod,
-        selectedSeats: bookingData.duration === '4' ? [] : selectedSeats,
+        selectedSeats: bookingData.duration === 'full' ? selectedSeats : [],
         totalAmount: calculateTotal()
       }
 
@@ -302,16 +374,16 @@ const Booking = () => {
         // Navigate to success page after a short delay
         setTimeout(() => {
           const bookingDetailsForSuccess = {
-            bookingId: response.data.bookingId || response.data.bookingIds?.[0],
+            name: bookingData.name,
+            email: bookingData.email,
+            phone: bookingData.phone,
             seats: selectedSeats,
             date: selectedDate,
-            time: selectedTime,
             duration: bookingData.duration,
+            subscriptionPeriod: bookingData.subscriptionPeriod,
             totalAmount: calculateTotal(),
-            ...bookingData
-          }
-          
-          console.log('Navigating to success page with data:', bookingDetailsForSuccess)
+            paymentDetails: response?.data?.paymentDetails || null
+          };
           
           navigate('/booking-success', {
             state: {
@@ -325,7 +397,6 @@ const Booking = () => {
     } catch (error) {
       const errorInfo = apiUtils.handleError(error)
       toast.error(errorInfo.message)
-      console.error('Booking error:', errorInfo)
     } finally {
       setIsLoading(false)
     }
@@ -347,6 +418,19 @@ const Booking = () => {
   const getSeatPosition = (seatId) => {
     if (seatId <= 11) return 'Column 1'
     return 'Column 2'
+  }
+
+  // Prevent booking for past dates
+  const isDateInPast = (date) => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return date < today;
+  }
+
+  // Helper to get expiry date for a seat
+  const getSeatExpiryDate = (seatId) => {
+    const booking = getBookedSeatInfo(seatId)
+    return booking?.expiry_date || null
   }
 
   return (
@@ -413,6 +497,9 @@ const Booking = () => {
           </div>
         </motion.div>
 
+        {/* Move the Booking Policy note above the main card, before Step 1 heading */}
+        {/* Remove the Booking Policy note from above the main card */}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
@@ -428,7 +515,8 @@ const Booking = () => {
                 </h2>
                 
                 {/* Date and Subscription Selection */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+                  {/* Replace the date input with a dropdown for date selection */}
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.2 }}
@@ -437,13 +525,24 @@ const Booking = () => {
                       <Calendar className="w-4 h-4 inline mr-2" />
                       Start Date
                     </label>
-                    <input
-                      type="date"
+                    <select
                       value={format(selectedDate, 'yyyy-MM-dd')}
-                      onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                      min={format(new Date(), 'yyyy-MM-dd')}
+                      onChange={e => {
+                        const newDate = new Date(e.target.value);
+                        setSelectedDate(newDate);
+                      }}
                       className="input-field focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-                    />
+                    >
+                      <option value={format(nextThreeDates[0], 'yyyy-MM-dd')}>
+                        {format(nextThreeDates[0], 'MMM dd')} (Today)
+                      </option>
+                      <option value={format(nextThreeDates[1], 'yyyy-MM-dd')}>
+                        {format(nextThreeDates[1], 'MMM dd')} (Tomorrow)
+                      </option>
+                      <option value={format(nextThreeDates[2], 'yyyy-MM-dd')}>
+                        {format(nextThreeDates[2], 'MMM dd')} (Day After)
+                      </option>
+                    </select>
                   </motion.div>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -460,7 +559,7 @@ const Booking = () => {
                     >
                       {subscriptionPeriods.map(period => (
                         <option key={period.value} value={period.value}>
-                          {period.label} - ₹{period.price}
+                          {period.label}{period.price && bookingData.duration !== '4' ? ` - ₹${period.price}` : ''}
                         </option>
                       ))}
                     </select>
@@ -561,39 +660,38 @@ const Booking = () => {
                       <div className="grid grid-cols-1 gap-3">
                         {Array.from({ length: 11 }, (_, i) => {
                           const seatId = i + 1
-                          const status = getSeatStatus(seatId)
-                          
+                          // const status = getSeatStatus(seatId) // Remove status for fulltime disable logic
                           return (
                             <motion.button
                               key={seatId}
                               onClick={() => handleSeatClick(seatId)}
-                              disabled={status === 'booked'}
+                              disabled={isFullTimeSeatBooked(seatId)}
                               onHoverStart={() => setHoveredSeat(seatId)}
                               onHoverEnd={() => setHoveredSeat(null)}
-                              whileHover={status !== 'booked' ? { scale: 1.02, y: -2 } : {}}
-                              whileTap={status !== 'booked' ? { scale: 0.98 } : {}}
-                              className={`seat seat-${status} w-full h-14 relative rounded-lg transition-all duration-200 ${
+                              whileHover={!isFullTimeSeatBooked(seatId) ? { scale: 1.02, y: -2 } : {}}
+                              whileTap={!isFullTimeSeatBooked(seatId) ? { scale: 0.98 } : {}}
+                              className={`seat w-full h-14 relative rounded-lg transition-all duration-200 ${
                                 selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg' : ''
                               } ${
-                                status === 'booked' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
+                                isFullTimeSeatBooked(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
                               }`}
                             >
                               <div className="flex items-center justify-between px-4">
                                 <div className="flex items-center space-x-2">
                                   <span className="font-medium">Seat {seatId}</span>
-                                  {status === 'booked' && (
+                                  {isFullTimeSeatBooked(seatId) && (
                                     <div className="flex items-center space-x-1">
                                       <X className="w-4 h-4 text-red-500" />
                                       <span className="text-xs text-red-600 font-medium">BOOKED</span>
+                                      {getSeatExpiryDate(seatId) && (
+                                        <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded ml-2">
+                                          Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
+                                        </span>
+                                      )}
                                     </div>
                                   )}
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  {status === 'booked' && (
-                                    <div className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
-                                      Until {getBookingEndDate(getBookedSeatInfo(seatId)?.date || selectedDate, getBookedSeatInfo(seatId)?.duration || '1')}
-                                    </div>
-                                  )}
                                   {selectedSeats.includes(seatId) && (
                                     <motion.div
                                       initial={{ scale: 0 }}
@@ -613,7 +711,7 @@ const Booking = () => {
                                   animate={{ opacity: 1, y: 0 }}
                                   className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10"
                                 >
-                                  {status === 'booked' ? 'Already Booked' : 'Click to Select'}
+                                  {isFullTimeSeatBooked(seatId) ? 'Already Booked' : 'Click to Select'}
                                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                                 </motion.div>
                               )}
@@ -631,39 +729,38 @@ const Booking = () => {
                       <div className="grid grid-cols-1 gap-3">
                         {Array.from({ length: 11 }, (_, i) => {
                           const seatId = i + 12
-                          const status = getSeatStatus(seatId)
-                          
+                          // const status = getSeatStatus(seatId) // Remove status for fulltime disable logic
                           return (
                             <motion.button
                               key={seatId}
                               onClick={() => handleSeatClick(seatId)}
-                              disabled={status === 'booked'}
+                              disabled={isFullTimeSeatBooked(seatId)}
                               onHoverStart={() => setHoveredSeat(seatId)}
                               onHoverEnd={() => setHoveredSeat(null)}
-                              whileHover={status !== 'booked' ? { scale: 1.02, y: -2 } : {}}
-                              whileTap={status !== 'booked' ? { scale: 0.98 } : {}}
-                              className={`seat seat-${status} w-full h-14 relative rounded-lg transition-all duration-200 ${
+                              whileHover={!isFullTimeSeatBooked(seatId) ? { scale: 1.02, y: -2 } : {}}
+                              whileTap={!isFullTimeSeatBooked(seatId) ? { scale: 0.98 } : {}}
+                              className={`seat w-full h-14 relative rounded-lg transition-all duration-200 ${
                                 selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg' : ''
                               } ${
-                                status === 'booked' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
+                                isFullTimeSeatBooked(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
                               }`}
                             >
                               <div className="flex items-center justify-between px-4">
                                 <div className="flex items-center space-x-2">
                                   <span className="font-medium">Seat {seatId}</span>
-                                  {status === 'booked' && (
+                                  {isFullTimeSeatBooked(seatId) && (
                                     <div className="flex items-center space-x-1">
                                       <X className="w-4 h-4 text-red-500" />
                                       <span className="text-xs text-red-600 font-medium">BOOKED</span>
+                                      {getSeatExpiryDate(seatId) && (
+                                        <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded ml-2">
+                                          Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
+                                        </span>
+                                      )}
                                     </div>
                                   )}
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                  {status === 'booked' && (
-                                    <div className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
-                                      Until {getBookingEndDate(getBookedSeatInfo(seatId)?.date || selectedDate, getBookedSeatInfo(seatId)?.duration || '1')}
-                                    </div>
-                                  )}
                                   {selectedSeats.includes(seatId) && (
                                     <motion.div
                                       initial={{ scale: 0 }}
@@ -683,7 +780,7 @@ const Booking = () => {
                                   animate={{ opacity: 1, y: 0 }}
                                   className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10"
                                 >
-                                  {status === 'booked' ? 'Already Booked' : 'Click to Select'}
+                                  {isFullTimeSeatBooked(seatId) ? 'Already Booked' : 'Click to Select'}
                                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                                 </motion.div>
                               )}
@@ -750,6 +847,18 @@ const Booking = () => {
                   Step 2: Personal Details
                 </h2>
                 
+                {/* Add a single compact blue info note (Booking Policy) above the form fields */}
+                <div className="flex items-start bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs text-blue-900 mb-4">
+                  <svg className="w-4 h-4 mr-2 flex-shrink-0 text-blue-500 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  <div>
+                    <span className="font-semibold">Booking Policy:</span> <br/>
+                    You can only book for <span className="font-medium text-blue-700">today, tomorrow, or the day after tomorrow</span>.<br/>
+                    This prevents advance blocking and keeps seat availability fair for everyone.<br/>
+                    <span className="font-medium text-blue-700">1 Month</span> is best for regulars, <span className="font-medium text-blue-700">15 Days</span> is great for short-term needs.<br/>
+                    Choose the option that fits your study plans!
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -775,8 +884,7 @@ const Booking = () => {
                   >
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <Mail className="w-4 h-4 inline mr-2" />
-                      Email Address *
-                      <span className="ml-2 text-xs text-primary-600">thestudypointlibraryjeeran@gmail.com</span>
+                      Email Address 
                     </label>
                     <input
                       type="email"
@@ -806,27 +914,7 @@ const Booking = () => {
                       required
                     />
                   </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <Clock className="w-4 h-4 inline mr-2" />
-                      Duration (Hours)
-                    </label>
-                    <select
-                      name="duration"
-                      value={bookingData.duration}
-                      onChange={handleInputChange}
-                      className="input-field focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-                    >
-                      {durationOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label} - ₹{option.price}
-                        </option>
-                      ))}
-                    </select>
-                  </motion.div>
+
                 </div>
 
                 {/* Security Notice */}
@@ -1063,7 +1151,7 @@ const Booking = () => {
                   <li>• 4 Hours (Morning/Evening): ₹300 per seat</li>
                   <li>• Full Time: ₹600 per seat</li>
                   <li>• Payment required at booking</li>
-                  <li>• No refunds after 7 days</li>
+                  <li>• We only allow booking for today, tomorrow, or the day after tomorrow to prevent advance blocking and ensure fair seat availability for all students.</li>
                 </ul>
               </div>
             </motion.div>

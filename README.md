@@ -268,7 +268,7 @@ This project is licensed under the MIT License.
 
 For support or questions:
 - Email: info@studyspace.com
-- Phone: +1 (555) 123-4567
+- Phone: +91 7089290615
 
 ---
 

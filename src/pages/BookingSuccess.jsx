@@ -15,11 +15,14 @@ import {
   Shield
 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
+import { getUploadUrl, getFallbackUrl } from '../config/urls'
+import BookingIdCard from '../components/BookingIdCard'
 
 const BookingSuccess = () => {
   const location = useLocation()
   const [bookingDetails, setBookingDetails] = useState(null)
   const cardRef = useRef(null)
+  const hiddenCardRef = useRef(null) // NEW: for hidden PDF rendering
   const [pdfUrl, setPdfUrl] = useState(null);
 
   useEffect(() => {
@@ -39,10 +42,90 @@ const BookingSuccess = () => {
     }
   }, [location])
 
+  // 1. Add useEffect to auto-generate and upload PDF after bookingDetails is set
+  useEffect(() => {
+    if (!bookingDetails) return;
+    (async () => {
+      if (!hiddenCardRef.current) return; // Use hidden card
+      
+      // Get the booking details for PDF generation
+      const name = bookingDetails.name ? String(bookingDetails.name) : 'N/A';
+      const email = bookingDetails.email ? String(bookingDetails.email) : 'N/A';
+      const phone = bookingDetails.phone ? String(bookingDetails.phone) : 'N/A';
+      const seats = Array.isArray(bookingDetails.seats) ? bookingDetails.seats.join(', ') : (bookingDetails.seats || 'N/A');
+      const totalAmount = bookingDetails.totalAmount ? `₹${bookingDetails.totalAmount}` : 'N/A';
+      const bookingDate = bookingDetails.date
+        ? (typeof bookingDetails.date === 'string'
+            ? bookingDetails.date
+            : format(new Date(bookingDetails.date), 'dd/MM/yyyy'))
+        : 'N/A';
+      
+      // Calculate expiry date
+      const getExpiryDate = (startDate, subscriptionPeriod) => {
+        const start = new Date(startDate)
+        const days = subscriptionPeriod === '0.5' ? 15 : 30
+        const expiry = new Date(start)
+        expiry.setDate(start.getDate() + days)
+        return format(expiry, 'dd/MM/yyyy')
+      }
+      const expiryDate = bookingDetails.date && bookingDetails.subscriptionPeriod
+        ? getExpiryDate(bookingDetails.date, bookingDetails.subscriptionPeriod)
+        : 'N/A';
+      
+      // Generate PDF from card
+      const canvas = await html2canvas(hiddenCardRef.current, { backgroundColor: null, scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = 120;
+      const imgHeight = (canvas.height / canvas.width) * imgWidth;
+      const x = (pageWidth - imgWidth) / 2;
+      const y = (pageHeight - imgHeight) / 2;
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+      
+      // Convert PDF to Blob
+      const pdfBlob = pdf.output('blob');
+      const formData = new FormData();
+      formData.append('pdf', pdfBlob, 'booking-id-card.pdf');
+      
+      // Upload to backend
+      try {
+        const response = await axios.post('/api/upload-pdf', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        
+        if (response.data.success) {
+          setPdfUrl(response.data.url);
+          
+          // Call backend to send email with PDF
+          await axios.post('/api/send-booking-email', {
+            email: email,
+            name: name,
+            pdfUrl: response.data.url,
+            bookingDetails: {
+              name, 
+              email, 
+              phone, 
+              seats, 
+              bookingDate, 
+              expiryDate, 
+              totalAmount
+            }
+          });
+          
+        }
+      } catch (err) {
+        console.error('PDF upload or email error:', err);
+      }
+    })();
+    // eslint-disable-next-line
+  }, [bookingDetails]);
+
+  // 2. In handleDownloadIDCard, just download the PDF (no upload logic)
   const handleDownloadIDCard = async () => {
-    if (!cardRef.current) return;
-    // 1. Generate PDF from card
-    const canvas = await html2canvas(cardRef.current, { backgroundColor: null, scale: 2 });
+    if (!hiddenCardRef.current) return;
+    const canvas = await html2canvas(hiddenCardRef.current, { backgroundColor: null, scale: 2 });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -52,31 +135,8 @@ const BookingSuccess = () => {
     const x = (pageWidth - imgWidth) / 2;
     const y = (pageHeight - imgHeight) / 2;
     pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-
-    // 2. Convert PDF to Blob
-    const pdfBlob = pdf.output('blob');
-    const formData = new FormData();
-    formData.append('pdf', pdfBlob, 'booking-id-card.pdf');
-
-    // 3. POST to backend
-    try {
-      console.log('Uploading PDF to backend...');
-      const response = await axios.post('http://localhost:3001/api/upload-pdf', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      console.log('Upload response:', response.data);
-      if (response.data.success) {
-        setPdfUrl(response.data.url);
-        alert('PDF uploaded! Link: ' + response.data.url);
-        pdf.save('StudyPoint_IDCard.pdf'); // Optionally download locally
-      } else {
-        alert('Failed to upload PDF');
-      }
-    } catch (err) {
-      console.error('Upload error:', err);
-      alert('Error uploading PDF: ' + err.message);
-    }
-  }
+    pdf.save('StudyPoint_IDCard.pdf');
+  };
 
   if (!bookingDetails) {
     return (
@@ -116,10 +176,29 @@ const BookingSuccess = () => {
   const bookingNumber = `BK${Math.random().toString().substr(2, 6)}`;
 
   // QR code data: use the uploaded PDF link if available, otherwise fallback
-  const qrValue = pdfUrl || 'https://drive.google.com/drive/folders/1uaHcm9tJF7i3D7so3U2O8Lx95zF_cPNE?usp=sharing';
+  const qrValue = pdfUrl || getFallbackUrl();
+
+  // Calculate expiry date based on booking date and subscription period
+  const getExpiryDate = (startDate, subscriptionPeriod) => {
+    const start = new Date(startDate)
+    const days = subscriptionPeriod === '0.5' ? 15 : 30
+    const expiry = new Date(start)
+    expiry.setDate(start.getDate() + days)
+    return format(expiry, 'dd/MM/yyyy')
+  }
+  const expiryDate = bookingDetails.date && bookingDetails.subscriptionPeriod
+    ? getExpiryDate(bookingDetails.date, bookingDetails.subscriptionPeriod)
+    : 'N/A';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
+      {/* Hidden card for PDF generation only */}
+      <div style={{ position: 'fixed', left: '-9999px', top: 0, width: 480 }}>
+        <div ref={hiddenCardRef}>
+          <BookingIdCard bookingDetails={bookingDetails} />
+        </div>
+      </div>
+      {/* Visible content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -227,6 +306,10 @@ const BookingSuccess = () => {
                 <label className="text-xs font-bold text-red-700 uppercase">Amount</label>
                 <p className="text-sm font-semibold text-gray-800">{totalAmount}</p>
               </div>
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 col-span-2 md:col-span-4">
+                <label className="text-xs font-bold text-blue-700 uppercase">Expiry Date</label>
+                <p className="text-base font-bold text-blue-900">{expiryDate}</p>
+              </div>
             </div>
             <div className="mt-4 flex justify-end">
               {/* Real QR code for booking info */}
@@ -236,10 +319,10 @@ const BookingSuccess = () => {
             </div>
           </div>
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 text-xs">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-0">
               <div>
                 <p>Established: July 10th, 2023 - First Library in Jiran</p>
-                <p>Valid until: {format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')}</p>
+                <p>Valid until: {expiryDate}</p>
               </div>
               <div className="text-right">
                 <p>SECURITY FEATURES:</p>

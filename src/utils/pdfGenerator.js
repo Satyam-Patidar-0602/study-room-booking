@@ -67,13 +67,6 @@ F = 9×10^9 × (2×10^-7 × 3×10^-7) / (0.3)²
 F = 9×10^9 × 6×10^-14 / 0.09
 F = 6×10^-3 N
 
-Q2. A 600 pF capacitor is charged by a 200 V supply. It is then disconnected from the supply and is connected to another uncharged 600 pF capacitor. How much electrostatic energy is lost in the process?
-
-Solution:
-Initial energy = ½CV² = ½ × 600×10^-12 × (200)² = 12×10^-6 J
-Final energy = ½ × 1200×10^-12 × (100)² = 6×10^-6 J
-Energy lost = 12×10^-6 - 6×10^-6 = 6×10^-6 J
-
 CHEMISTRY SOLUTIONS
 ==================
 
@@ -91,15 +84,6 @@ Examples:
 - Wax
 - Tar
 
-Chapter 2: Solutions
-
-Q1. Calculate the mass percentage of benzene (C6H6) and carbon tetrachloride (CCl4) if 22 g of benzene is dissolved in 122 g of carbon tetrachloride.
-
-Solution:
-Total mass of solution = 22 + 122 = 144 g
-Mass percentage of benzene = (22/144) × 100 = 15.28%
-Mass percentage of CCl4 = (122/144) × 100 = 84.72%
-
 MATHEMATICS SOLUTIONS
 =====================
 
@@ -114,14 +98,6 @@ To prove R is an equivalence relation, we need to show:
 (iii) Transitive: If |a – b| and |b – c| are even, then |a – c| is even ✓
 
 Hence R is an equivalence relation.
-
-Chapter 2: Inverse Trigonometric Functions
-
-Q1. Find the principal value of sin^-1(-1/2)
-
-Solution:
-sin^-1(-1/2) = -π/6 (principal value)
-Since sin(-π/6) = -1/2 and -π/6 ∈ [-π/2, π/2]
 
 IMPORTANT FORMULAS
 ==================
@@ -167,15 +143,6 @@ Final momentum = mv (←)
 Change in momentum = mv - (-mv) = 2mv
 Answer: (b) 2mv
 
-Q2. A block of mass 2 kg is placed on a rough inclined plane as shown. The coefficient of static friction between the block and the plane is 0.4. The minimum angle of inclination of the plane for which the block will start sliding is:
-(a) 21.8° (b) 30° (c) 45° (d) 60°
-
-Solution:
-For sliding to start: mg sin θ = μmg cos θ
-tan θ = μ = 0.4
-θ = tan^-1(0.4) = 21.8°
-Answer: (a) 21.8°
-
 CHEMISTRY SECTION
 =================
 
@@ -187,14 +154,6 @@ CH3-CH2-CH=CH-CH3
 Counting from left: CH3-CH2-CH=CH-CH3
 Double bond is at position 2
 Answer: (a) 2-pentene
-
-Q2. Which of the following is a strong electrolyte?
-(a) CH3COOH (b) NH4OH (c) NaCl (d) H2O
-
-Solution:
-Strong electrolytes completely dissociate in solution.
-NaCl is a strong electrolyte as it completely dissociates into Na+ and Cl- ions.
-Answer: (c) NaCl
 
 MATHEMATICS SECTION
 ===================
@@ -208,61 +167,6 @@ Squaring both sides: sin²θ + cos²θ + 2sinθcosθ = 1
 1 + sin 2θ = 1
 sin 2θ = 0
 Answer: (a) 0
-
-Q2. The number of real roots of the equation x^4 - 4x^3 + 12x^2 - 16x + 8 = 0 is:
-(a) 0 (b) 1 (c) 2 (d) 4
-
-Solution:
-Let f(x) = x^4 - 4x^3 + 12x^2 - 16x + 8
-f'(x) = 4x^3 - 12x^2 + 24x - 16
-f'(x) = 4(x^3 - 3x^2 + 6x - 4)
-f'(x) = 4(x-1)(x^2 - 2x + 4)
-Since x^2 - 2x + 4 > 0 for all real x, f'(x) = 0 only at x = 1
-f(x) has minimum at x = 1
-f(1) = 1 - 4 + 12 - 16 + 8 = 1 > 0
-Hence f(x) > 0 for all real x
-Answer: (a) 0
-
-JEE MAIN 2022 - PAPER 1
-=======================
-
-PHYSICS SECTION
-===============
-
-Q1. A body is moving with uniform acceleration. Its velocity after 5 seconds is 25 m/s and after 8 seconds is 34 m/s. The acceleration of the body is:
-(a) 3 m/s² (b) 4 m/s² (c) 5 m/s² (d) 6 m/s²
-
-Solution:
-v = u + at
-25 = u + 5a ...(1)
-34 = u + 8a ...(2)
-Subtracting (1) from (2): 9 = 3a
-a = 3 m/s²
-Answer: (a) 3 m/s²
-
-CHEMISTRY SECTION
-=================
-
-Q1. The hybridization of carbon in CH4 is:
-(a) sp (b) sp² (c) sp³ (d) sp³d
-
-Solution:
-CH4 has tetrahedral geometry
-Carbon forms 4 sigma bonds
-Hybridization = sp³
-Answer: (c) sp³
-
-MATHEMATICS SECTION
-===================
-
-Q1. The value of ∫(x²+1)/(x+1) dx is:
-(a) x²/2 + x + C (b) x²/2 - x + C (c) x²/2 + ln|x+1| + C (d) x²/2 - ln|x+1| + C
-
-Solution:
-∫(x²+1)/(x+1) dx = ∫(x²-1+2)/(x+1) dx
-= ∫(x-1) dx + ∫2/(x+1) dx
-= x²/2 - x + 2ln|x+1| + C
-Answer: (c) x²/2 + ln|x+1| + C
 
 IMPORTANT FORMULAS FOR JEE MAIN
 ===============================
@@ -350,170 +254,6 @@ Angiosperms:
 - Monocots: Rice, Wheat, Maize
 - Dicots: Pea, Sunflower, Rose
 
-CHAPTER 4: ANIMAL KINGDOM
-=========================
-
-Phylum Porifera (Sponges):
-- Cellular level of organization
-- Asymmetrical body
-- Examples: Sycon, Spongilla
-
-Phylum Coelenterata:
-- Tissue level of organization
-- Radial symmetry
-- Examples: Hydra, Jellyfish
-
-Phylum Platyhelminthes (Flatworms):
-- Organ level of organization
-- Bilateral symmetry
-- Examples: Planaria, Liver fluke
-
-Phylum Nematoda (Roundworms):
-- Organ level of organization
-- Pseudocoelomate
-- Examples: Ascaris, Wuchereria
-
-Phylum Annelida (Segmented worms):
-- Organ system level
-- True coelom
-- Examples: Earthworm, Leech
-
-Phylum Arthropoda:
-- Jointed appendages
-- Exoskeleton of chitin
-- Examples: Cockroach, Butterfly, Spider
-
-Phylum Mollusca:
-- Soft body with shell
-- Examples: Snail, Octopus, Pearl oyster
-
-Phylum Echinodermata:
-- Spiny skinned
-- Radial symmetry in adults
-- Examples: Starfish, Sea urchin
-
-Phylum Chordata:
-- Notochord present
-- Dorsal nerve cord
-- Pharyngeal gill slits
-- Post-anal tail
-
-UNIT 3: CELL STRUCTURE AND FUNCTION
-===================================
-
-CHAPTER 5: CELL: THE UNIT OF LIFE
-=================================
-
-Cell Theory:
-1. All living organisms are composed of cells
-2. Cell is the basic unit of life
-3. All cells arise from pre-existing cells
-
-Prokaryotic Cell:
-- No nucleus
-- No membrane-bound organelles
-- Examples: Bacteria, Cyanobacteria
-
-Eukaryotic Cell:
-- True nucleus
-- Membrane-bound organelles
-- Examples: Plant and animal cells
-
-Cell Organelles:
-1. Cell Membrane: Selectively permeable
-2. Cell Wall: Present in plants, fungi, bacteria
-3. Nucleus: Contains genetic material
-4. Mitochondria: Powerhouse of cell
-5. Chloroplast: Site of photosynthesis
-6. Endoplasmic Reticulum: Protein and lipid synthesis
-7. Golgi Apparatus: Packaging and secretion
-8. Lysosomes: Digestive enzymes
-9. Vacuoles: Storage and turgidity
-10. Ribosomes: Protein synthesis
-
-UNIT 4: PLANT PHYSIOLOGY
-========================
-
-CHAPTER 6: PHOTOSYNTHESIS
-=========================
-
-Photosynthesis is the process by which green plants synthesize organic compounds from CO2 and H2O in the presence of sunlight.
-
-Equation: 6CO2 + 12H2O → C6H12O6 + 6O2 + 6H2O
-
-Light Reaction:
-- Takes place in thylakoid membranes
-- Requires light energy
-- Produces ATP and NADPH
-- Splits water to release oxygen
-
-Dark Reaction (Calvin Cycle):
-- Takes place in stroma
-- Does not require light
-- Uses ATP and NADPH
-- Fixes CO2 to form glucose
-
-CHAPTER 7: RESPIRATION
-======================
-
-Respiration is the process of oxidation of food to release energy.
-
-Aerobic Respiration:
-C6H12O6 + 6O2 → 6CO2 + 6H2O + Energy
-
-Steps:
-1. Glycolysis: Glucose → Pyruvate
-2. Krebs Cycle: Pyruvate → CO2 + NADH + FADH2
-3. Electron Transport Chain: NADH + FADH2 → ATP
-
-UNIT 5: HUMAN PHYSIOLOGY
-========================
-
-CHAPTER 8: DIGESTION AND ABSORPTION
-===================================
-
-Digestive System:
-- Mouth: Mechanical and chemical digestion
-- Esophagus: Food passage
-- Stomach: Protein digestion
-- Small Intestine: Complete digestion and absorption
-- Large Intestine: Water absorption
-
-Enzymes:
-- Amylase: Starch → Maltose
-- Pepsin: Proteins → Peptides
-- Trypsin: Proteins → Amino acids
-- Lipase: Fats → Fatty acids + Glycerol
-
-CHAPTER 9: BREATHING AND EXCHANGE OF GASES
-==========================================
-
-Respiratory System:
-- Nose: Air filtration and warming
-- Pharynx: Common passage
-- Larynx: Voice box
-- Trachea: Windpipe
-- Bronchi: Air passage to lungs
-- Alveoli: Gas exchange
-
-Mechanism:
-- Inspiration: Diaphragm contracts, chest expands
-- Expiration: Diaphragm relaxes, chest contracts
-
-CHAPTER 10: BODY FLUIDS AND CIRCULATION
-=======================================
-
-Blood Components:
-- Plasma: 55% of blood volume
-- RBCs: Oxygen transport
-- WBCs: Immunity
-- Platelets: Blood clotting
-
-Heart:
-- Four chambers: 2 atria, 2 ventricles
-- Double circulation: Pulmonary and systemic
-- Cardiac cycle: Systole and diastole
-
 IMPORTANT DIAGRAMS AND FIGURES
 ==============================
 
@@ -576,20 +316,6 @@ Scientific Discoveries:
 - Seismic activity measurements
 - Lunar soil analysis
 
-3. WOMEN'S RESERVATION BILL
-Parliament passed the Women's Reservation Bill (Nari Shakti Vandan Adhiniyam):
-- 33% reservation for women in Lok Sabha and State Assemblies
-- Bill received overwhelming support across party lines
-- Implementation after delimitation exercise
-- Historic step towards women empowerment
-
-4. DIGITAL INDIA INITIATIVES
-India's digital transformation continues to accelerate:
-- UPI transactions crossed 100 billion in 2023
-- Digital Rupee pilot expanded to more cities
-- Aadhaar-based services reach 1.3 billion people
-- India Stack becoming global model for digital governance
-
 INTERNATIONAL AFFAIRS
 =====================
 
@@ -606,26 +332,6 @@ India's Position:
 - Energy security concerns
 - Call for peaceful resolution
 
-2. ISRAEL-HAMAS CONFLICT
-Escalation in Middle East region:
-- Humanitarian crisis in Gaza
-- India's Operation Ajay to evacuate citizens
-- Global calls for ceasefire and peace talks
-- Impact on regional stability
-
-India's Response:
-- Evacuation of Indian citizens
-- Humanitarian aid to Palestine
-- Call for two-state solution
-- Balanced diplomatic approach
-
-3. CHINA'S BELT AND ROAD INITIATIVE
-10th anniversary of BRI celebrated:
-- India's concerns about CPEC continue
-- Alternative connectivity initiatives gaining traction
-- Debt sustainability issues in participating countries
-- Strategic implications for Indo-Pacific
-
 ECONOMY AND FINANCE
 ===================
 
@@ -641,105 +347,6 @@ Key Indicators:
 - Foreign exchange reserves strong
 - Current account deficit manageable
 - Fiscal consolidation on track
-
-2. DIGITAL PAYMENTS REVOLUTION
-UPI becoming global payment system:
-- Singapore, UAE, France adopt UPI
-- Cross-border digital payments expanding
-- Financial inclusion through digital means
-- India's digital leadership recognized
-
-3. CLIMATE FINANCE
-India's commitment to net zero by 2070:
-- Green hydrogen mission launched
-- Renewable energy capacity targets
-- International climate finance mechanisms
-- Sustainable development focus
-
-SCIENCE AND TECHNOLOGY
-======================
-
-1. ARTIFICIAL INTELLIGENCE
-India's AI mission launched:
-- Focus on indigenous AI development
-- Ethical AI framework being developed
-- AI for public service delivery
-- National AI strategy implementation
-
-2. SPACE TECHNOLOGY
-ISRO's commercial arm NSIL expanding:
-- Private sector participation in space sector
-- Satellite launch services to other countries
-- Space debris management initiatives
-- Commercial space activities
-
-ENVIRONMENT AND CLIMATE
-=======================
-
-1. CLIMATE CHANGE
-COP28 held in UAE:
-- Global stocktake of climate action
-- India's climate commitments
-- Adaptation and mitigation strategies
-- Climate finance discussions
-
-2. BIODIVERSITY CONSERVATION
-Kunming-Montreal Global Biodiversity Framework:
-- India's biodiversity targets
-- Wildlife conservation efforts
-- Marine ecosystem protection
-- Sustainable development goals
-
-HEALTH AND EDUCATION
-====================
-
-1. HEALTHCARE INITIATIVES
-Ayushman Bharat expansion:
-- Digital health mission progress
-- COVID-19 management learnings
-- Mental health awareness programs
-- Universal health coverage
-
-2. EDUCATION REFORMS
-National Education Policy implementation:
-- Digital learning platforms
-- Skill development programs
-- International student exchange programs
-- Quality education focus
-
-DEFENCE AND SECURITY
-====================
-
-1. DEFENCE MODERNIZATION
-Atmanirbhar Bharat in defence:
-- Indigenous weapons development
-- Defence exports increasing
-- Strategic partnerships with friendly nations
-- Self-reliance in defence
-
-2. CYBER SECURITY
-National Cyber Security Strategy:
-- Critical infrastructure protection
-- Cyber crime prevention
-- International cooperation on cyber security
-- Digital security framework
-
-AGRICULTURE AND RURAL DEVELOPMENT
-=================================
-
-1. AGRICULTURAL REFORMS
-PM-KISAN scheme benefits:
-- Digital agriculture initiatives
-- Crop insurance schemes
-- Agricultural marketing reforms
-- Farmer welfare programs
-
-2. RURAL DEVELOPMENT
-PM Gram Sadak Yojana progress:
-- Rural electrification completion
-- Digital connectivity in villages
-- Rural employment generation
-- Infrastructure development
 
 IMPORTANT UPSC PREPARATION TIPS
 ===============================
@@ -764,6 +371,239 @@ IMPORTANT UPSC PREPARATION TIPS
 
 This compilation covers major current affairs relevant for UPSC preparation.
 For detailed analysis and more topics, visit our library.`
+  },
+
+  'ssc-quantitative-aptitude': {
+    title: 'SSC Quantitative Aptitude Guide',
+    content: `SSC QUANTITATIVE APTITUDE GUIDE
+Complete Preparation Material for SSC Exams
+
+NUMBER SYSTEM
+=============
+
+1. Natural Numbers: 1, 2, 3, 4, 5, ...
+2. Whole Numbers: 0, 1, 2, 3, 4, ...
+3. Integers: ..., -3, -2, -1, 0, 1, 2, 3, ...
+4. Rational Numbers: Numbers that can be expressed as p/q
+5. Irrational Numbers: Numbers that cannot be expressed as p/q
+
+Important Formulas:
+- Sum of first n natural numbers = n(n+1)/2
+- Sum of squares of first n natural numbers = n(n+1)(2n+1)/6
+- Sum of cubes of first n natural numbers = [n(n+1)/2]²
+
+PERCENTAGE
+==========
+
+1. Basic Percentage: x% of y = (x/100) × y
+2. Percentage Change: ((New - Old)/Old) × 100
+3. Successive Percentage: If A increases by x% and then by y%, final value = A(1+x/100)(1+y/100)
+
+Examples:
+- 20% of 150 = (20/100) × 150 = 30
+- If 200 increases by 10% and then by 5%, final value = 200(1.1)(1.05) = 231
+
+PROFIT AND LOSS
+===============
+
+1. Profit = Selling Price - Cost Price
+2. Loss = Cost Price - Selling Price
+3. Profit % = (Profit/CP) × 100
+4. Loss % = (Loss/CP) × 100
+5. Selling Price = CP(1 + Profit%/100) or CP(1 - Loss%/100)
+
+Examples:
+- CP = ₹100, SP = ₹120, Profit = ₹20, Profit% = 20%
+- CP = ₹100, SP = ₹80, Loss = ₹20, Loss% = 20%
+
+SIMPLE AND COMPOUND INTEREST
+============================
+
+Simple Interest:
+- SI = (P × R × T)/100
+- Amount = P + SI
+
+Compound Interest:
+- Amount = P(1 + R/100)^T
+- CI = Amount - P
+
+Examples:
+- P = ₹1000, R = 10%, T = 2 years
+- SI = (1000 × 10 × 2)/100 = ₹200
+- Amount (CI) = 1000(1.1)² = ₹1210
+- CI = ₹210
+
+TIME AND WORK
+=============
+
+1. If A can do work in x days, work done in 1 day = 1/x
+2. If A and B can do work in x and y days respectively, together they can do in xy/(x+y) days
+3. Efficiency is inversely proportional to time
+
+Examples:
+- A can do work in 10 days, B in 15 days
+- Together: 10×15/(10+15) = 6 days
+
+PRACTICE QUESTIONS
+==================
+
+Q1. A number when divided by 6 leaves remainder 3. What will be the remainder when the square of this number is divided by 6?
+
+Solution:
+Let number be 6k + 3
+Square = (6k + 3)² = 36k² + 36k + 9 = 6(6k² + 6k + 1) + 3
+Remainder = 3
+
+Q2. A shopkeeper marks his goods 20% above cost price and gives 10% discount. Find his profit percentage.
+
+Solution:
+Let CP = 100
+Marked Price = 120
+Selling Price = 120 × 0.9 = 108
+Profit = 8, Profit% = 8%
+
+This comprehensive guide covers all major topics for SSC Quantitative Aptitude.
+For more practice questions and mock tests, visit our library.`
+  },
+
+  'mpsc-study-material': {
+    title: 'MPSC Study Material',
+    content: `MPSC STUDY MATERIAL
+Maharashtra Public Service Commission Preparation Guide
+
+MAHARASHTRA GEOGRAPHY
+=====================
+
+PHYSICAL FEATURES
+=================
+
+1. Western Ghats (Sahyadri):
+- Runs parallel to Arabian Sea coast
+- Average height: 1000-1500 meters
+- Highest peak: Kalsubai (1646m)
+- Important passes: Thal Ghat, Bhor Ghat, Pal Ghat
+
+2. Deccan Plateau:
+- Covers major part of Maharashtra
+- Average elevation: 600-900 meters
+- Rich in black soil (regur)
+- Major rivers originate here
+
+3. Konkan Coast:
+- Narrow coastal strip along Arabian Sea
+- Width: 50-80 km
+- High rainfall (3000-4000mm annually)
+- Important ports: Mumbai, JNPT, Ratnagiri
+
+MAJOR RIVERS
+============
+
+1. Godavari:
+- Longest river in Maharashtra
+- Source: Trimbakeshwar (Nashik)
+- Tributaries: Pravara, Purna, Manjra
+- Important cities: Nashik, Aurangabad, Nanded
+
+2. Krishna:
+- Second longest river
+- Source: Mahabaleshwar
+- Tributaries: Koyna, Bhima, Tungabhadra
+- Important cities: Satara, Sangli, Kolhapur
+
+MAHARASHTRA HISTORY
+===================
+
+ANCIENT PERIOD
+==============
+
+1. Satavahanas (230 BCE - 220 CE):
+- Capital: Pratishthan (Paithan)
+- Important rulers: Gautamiputra Satakarni
+- Trade with Rome, China
+- Buddhist art and architecture
+
+2. Vakatakas (250-500 CE):
+- Capital: Vatsagulma (Washim)
+- Patrons of art and literature
+- Ajanta caves built during this period
+
+MEDIEVAL PERIOD
+===============
+
+1. Yadavas (1187-1318):
+- Capital: Devagiri (Daulatabad)
+- Important rulers: Singhana, Ramachandra
+- Literature and architecture flourished
+- Defeated by Alauddin Khilji
+
+2. Maratha Empire (1674-1818):
+- Founded by Chhatrapati Shivaji Maharaj
+- Capital: Raigad, later Satara
+- Important rulers: Shivaji, Sambhaji, Rajaram, Shahu
+- Peshwa period (1713-1818)
+
+MAHARASHTRA POLITY
+==================
+
+CONSTITUTIONAL FRAMEWORK
+========================
+
+1. Governor:
+- Appointed by President
+- Constitutional head of state
+- Powers: Executive, Legislative, Judicial
+
+2. Chief Minister:
+- Real executive head
+- Appointed by Governor
+- Leader of majority party in Assembly
+
+3. State Legislature:
+- Bicameral: Legislative Assembly (288 members), Legislative Council (78 members)
+- Assembly term: 5 years
+- Council: 1/3 members retire every 2 years
+
+ADMINISTRATIVE STRUCTURE
+========================
+
+1. Divisions: 6 (Amravati, Aurangabad, Konkan, Nagpur, Nashik, Pune)
+2. Districts: 36
+3. Talukas: 358
+4. Villages: 43,665
+
+IMPORTANT SCHEMES AND POLICIES
+==============================
+
+1. Jalyukt Shivar Abhiyan:
+- Water conservation
+- Drought-proofing villages
+- Micro-irrigation projects
+
+2. Mahatma Jyotiba Phule Jan Arogya Yojana:
+- Health insurance scheme
+- Coverage for BPL families
+- Cashless treatment
+
+PRACTICE QUESTIONS
+==================
+
+Q1. Which is the highest peak in Maharashtra?
+(a) Kalsubai (b) Salher (c) Dhodap (d) Harishchandragad
+
+Answer: (a) Kalsubai (1646m)
+
+Q2. Who founded the Maratha Empire?
+(a) Sambhaji (b) Shivaji (c) Rajaram (d) Shahu
+
+Answer: (b) Chhatrapati Shivaji Maharaj
+
+Q3. How many districts are there in Maharashtra?
+(a) 34 (b) 35 (c) 36 (d) 37
+
+Answer: (c) 36
+
+This comprehensive guide covers all major topics for MPSC preparation.
+For more detailed notes and practice questions, visit our library.`
   }
 }
 

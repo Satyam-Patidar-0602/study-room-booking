@@ -14,7 +14,6 @@ const cashfree = new Cashfree(CF_ENV, CF_APP_ID, CF_SECRET_KEY);
 
 router.post('/create-order', async (req, res) => {
   const { customerName, customerEmail, customerPhone, duration, subscriptionPeriod } = req.body;
-  console.log('Received booking:', { customerName, customerEmail, customerPhone, duration, subscriptionPeriod });
   const orderId = 'order_' + Date.now();
 
   // Calculate order amount based on booking type and period
@@ -47,22 +46,20 @@ router.post('/create-order', async (req, res) => {
       }
     };
     const cfRes = await cashfree.PGCreateOrder(request);
-    console.log('Cashfree SDK response:', cfRes.data);
     const payment_session_id = cfRes.data.payment_session_id;
     res.json({ success: true, order: { ...cfRes.data, payment_session_id } });
   } catch (err) {
-    console.error('Cashfree SDK error:', err.response?.data || err);
     if (err.response) {
-      res.status(500).json({
-        success: false,
-        error: err.message || err,
+    res.status(500).json({
+      success: false,
+      error: err.message || err,
         cashfreeError: err.response.data
       });
     } else {
       res.status(500).json({
         success: false,
         error: err.message || err
-      });
+    });
     }
   }
 });

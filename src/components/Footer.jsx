@@ -58,6 +58,11 @@ const Footer = () => {
                   Contact
                 </Link>
               </li>
+              <li>
+                <Link to="/admin" className="text-gray-300 hover:text-white transition-colors">
+                  Admin
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -80,7 +85,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-primary-400" />
-                <span className="text-gray-300">+1 (555) 123-4567</span>
+                <span className="text-gray-300">+91 7089290615</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-primary-400" />
@@ -104,9 +109,6 @@ const Footer = () => {
             © 2024 StudySpace. All rights reserved.
           </p>
         </div>
-      </div>
-      <div className="flex flex-wrap gap-4 justify-center mt-4 text-sm text-gray-600">
-        <a href="/admin" className="hover:text-primary-600 underline">Admin</a>
       </div>
     </footer>
   )

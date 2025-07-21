@@ -64,7 +64,7 @@ const Chatbot = () => {
     },
     'contact': {
       keywords: ['contact', 'phone', 'email', 'reach', 'call'],
-      response: 'You can reach us through:\n• Email: thestudypointlibraryjeeran@gmail.com\n• Phone: +1 (555) 123-4567\n• Instagram: @the_study_point_library_jeeran\n\nWe typically respond within 24 hours.'
+      response: 'You can reach us through:\n• Email: thestudypointlibraryjeeran@gmail.com\n• Phone: +91 7089290615\n• Instagram: @the_study_point_library_jeeran\n\nWe typically respond within 24 hours.'
     }
   }
 

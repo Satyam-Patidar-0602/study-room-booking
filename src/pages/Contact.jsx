@@ -40,6 +40,7 @@ const Contact = () => {
   const [hoveredContact, setHoveredContact] = useState(null)
   const [copiedField, setCopiedField] = useState(null)
   const [currentFeature, setCurrentFeature] = useState(0)
+  const [expandedFaqHome, setExpandedFaqHome] = useState(null)
 
   const contactInfo = [
     {
@@ -53,7 +54,7 @@ const Contact = () => {
     {
       icon: Phone,
       title: 'Phone',
-      content: '+1 (555) 123-4567',
+      content: '+91 7089290615',
       link: 'tel:+15551234567',
       color: 'from-green-500 to-green-600',
       description: 'Call us anytime during business hours'
@@ -273,77 +274,6 @@ const Contact = () => {
           </motion.div>
         </div>
       </section>
-
-      {/* FAQ Section - moved up for prominence */}
-      <motion.section
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="-mt-16 mb-16 relative z-20"
-      >
-        <div className="max-w-5xl mx-auto bg-white/90 rounded-2xl shadow-2xl p-10 border-2 border-primary-100">
-          <div className="text-center mb-10">
-            <h2 className="text-4xl font-bold text-primary-700 mb-3 flex items-center justify-center gap-2">
-              <BookOpen className="w-7 h-7 text-primary-600" /> Frequently Asked Questions
-            </h2>
-            <p className="text-lg text-gray-600">
-              Find answers to common questions about our study room services.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[...faqs,
-              { question: "How do I pay for my booking?", answer: "You can pay online using UPI, debit/credit card, or net banking through our secure payment gateway (Cashfree)." },
-              { question: "Is the library open on holidays?", answer: "Yes, we are open 365 days a year, including all public holidays." },
-              { question: "Is there a quiet zone?", answer: "Yes, we have dedicated quiet zones for focused study." },
-              { question: "How can I contact the owners?", answer: "You can email us at thestudypointlibraryjeeran@gmail.com or call the number on the Contact page." }
-            ].map((faq, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.05 }}
-                className="card border border-primary-100 hover:shadow-xl transition-all duration-300 bg-white/95"
-              >
-                <button
-                  onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                  className="w-full text-left flex items-center justify-between p-6 focus:outline-none"
-                >
-                  <h3 className="text-lg font-semibold text-primary-700 pr-4">
-                    {faq.question}
-                  </h3>
-                  <motion.div
-                    animate={{ rotate: expandedFaq === index ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {expandedFaq === index ? (
-                      <ChevronUp className="w-5 h-5 text-primary-600" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
-                    )}
-                  </motion.div>
-                </button>
-                <AnimatePresence>
-                  {expandedFaq === index && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="px-6 pb-6"
-                    >
-                      <div className="border-t border-gray-200 pt-4">
-                        <p className="text-gray-600 leading-relaxed">
-                          {faq.answer}
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
 
       {/* Main Content Grid: Contact Info and Contact Form side by side */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -737,6 +667,80 @@ const Contact = () => {
             </div>
           </div>
         </motion.section>
+
+      {/* FAQ SECTION AT BOTTOM */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Find answers to common questions about booking, facilities, and our library policies.
+            </p>
+          </motion.div>
+          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[
+              { question: "How do I book a seat?", answer: "Go to the Booking page, select your date and seat, fill in your details, and complete the payment online." },
+              { question: "What are your operating hours?", answer: "We are open from 6:30 AM to 11:00 PM, 7 days a week, including holidays." },
+              { question: "Is WiFi available?", answer: "Yes, we provide high-speed WiFi to all registered students." },
+              { question: "Can I bring my own food and drinks?", answer: "Yes, you can bring your own food and drinks. Please keep the study area clean." },
+              { question: "How do I contact the library?", answer: "You can use the Contact page or email us at thestudypointlibraryjeeran@gmail.com." },
+              { question: "Is the library open on public holidays?", answer: "Yes, we are open every day of the year." },
+              { question: "How do I pay for my booking?", answer: "You can pay online using UPI, debit/credit card, or net banking through our secure payment gateway." },
+              { question: "Is there a quiet zone?", answer: "Yes, we have dedicated quiet zones for focused study." }
+            ].map((faq, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: idx * 0.05 }}
+                viewport={{ once: true }}
+                className="card border border-primary-100 hover:shadow-xl transition-all duration-300 bg-white/95"
+              >
+                <button
+                  type="button"
+                  className="w-full text-left flex items-center justify-between p-6 focus:outline-none"
+                  onClick={() => setExpandedFaqHome(idx === expandedFaqHome ? null : idx)}
+                >
+                  <h3 className="text-lg font-semibold text-primary-700 pr-4">{faq.question}</h3>
+                  <motion.div
+                    animate={{ rotate: expandedFaqHome === idx ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {expandedFaqHome === idx ? (
+                      <ArrowRight className="w-5 h-5 text-primary-600" />
+                    ) : (
+                      <ArrowRight className="w-5 h-5 text-gray-400" />
+                    )}
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {expandedFaqHome === idx && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="px-6 pb-6"
+                    >
+                      <div className="border-t border-gray-200 pt-4">
+                        <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

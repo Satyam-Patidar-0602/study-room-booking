@@ -5,12 +5,22 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const bookingsRouter = require('./routes/bookings');
-const uploadRoutes = require('./routes/upload');
+const uploadRoutes = require('./routes/upload-local');
 const cashfreeRoutes = require('./routes/cashfree');
 const contactRoute = require('./routes/contact');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Enable CORS for both localhost and 127.0.0.1 for port 3000
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ],
+  credentials: true
+}));
 
 // Security middleware
 app.use(helmet());
@@ -25,25 +35,12 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// CORS configuration
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://127.0.0.1:3001',
-    'http://localhost:3001',
-    'http://127.0.0.1:3000',
-    'http://localhost:3000'
-  ],
-  credentials: true
-}));
-
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
@@ -61,6 +58,7 @@ app.use('/api/bookings', bookingsRouter);
 app.use('/api', uploadRoutes);
 app.use('/api/cashfree', cashfreeRoutes);
 app.use('/api/contact', contactRoute);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -73,13 +71,9 @@ app.use('*', (req, res) => {
 if (typeof Headers === "undefined") {
   global.Headers = require("node-fetch").Headers;
 }
-if (typeof Blob === "undefined") {
-  global.Blob = require("fetch-blob");
-}
 
 // Global error handler
 app.use((error, req, res, next) => {
-  console.error('Global error handler:', error);
   
   // Handle specific error types
   if (error.name === 'ValidationError') {
@@ -108,20 +102,16 @@ app.use((error, req, res, next) => {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
   process.exit(0);
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`📚 API base: http://localhost:${PORT}/api`);
+  // Remove all console.log statements
 });
 
 module.exports = app; 
