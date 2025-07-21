@@ -11,16 +11,18 @@
     "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix"
   },
   "dependencies": {
+    "@cashfreepayments/cashfree-js": "^1.0.5",
     "axios": "^1.10.0",
     "cors": "^2.8.5",
     "date-fns": "^2.29.3",
     "express": "^5.1.0",
     "framer-motion": "^10.16.4",
-    "googleapis": "^152.0.0",
+
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.263.1",
     "multer": "^2.0.1",
+    "node-fetch": "^2.7.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
