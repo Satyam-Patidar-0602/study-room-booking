@@ -37,7 +37,7 @@ const upload = multer({
 });
 
 // API endpoint to receive PDF and save locally
-router.post('/upload-pdf', upload.single('pdf'), async (req, res) => {
+router.post('/', upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No PDF file provided' });
