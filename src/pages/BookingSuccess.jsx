@@ -99,7 +99,7 @@ const BookingSuccess = () => {
           setPdfUrl(response.data.url);
           
           // Call backend to send email with PDF
-          await axios.post('/api/send-booking-email', {
+          await axios.post(`${getBaseUrl()}/api/send-booking-email`, {
             email: email,
             name: name,
             pdfUrl: response.data.url,

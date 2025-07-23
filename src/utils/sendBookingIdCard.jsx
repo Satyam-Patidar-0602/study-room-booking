@@ -4,6 +4,7 @@ import axios from 'axios';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import BookingIdCard from '../components/BookingIdCard'; // You may need to extract the card from BookingSuccess.jsx
+import { getBaseUrl } from '../config/urls';
 
 /**
  * bookingDetails: {
@@ -44,14 +45,14 @@ export async function sendBookingIdCardPDF({ bookingDetails, email, onComplete }
   const pdfBlob = pdf.output('blob');
   const formData = new FormData();
   formData.append('pdf', pdfBlob, 'booking-id-card.pdf');
-  const uploadRes = await axios.post('/api/upload-pdf', formData, {
+  const uploadRes = await axios.post(`${getBaseUrl()}/api/upload-pdf`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (!uploadRes.data.success) throw new Error('PDF upload failed');
   const pdfUrl = uploadRes.data.url;
 
   // 6. Send email
-  await axios.post('/api/send-booking-email', {
+  await axios.post(`${getBaseUrl()}/api/send-booking-email`, {
     email,
     name: bookingDetails.name,
     pdfUrl,
