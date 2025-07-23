@@ -8,7 +8,7 @@ const bookingsRouter = require('./routes/bookings');
 const uploadRoutes = require('./routes/upload-local');
 const cashfreeRoutes = require('./routes/cashfree');
 const contactRoute = require('./routes/contact');
-const adminRoutes = require('./routes/admin');
+const { router: adminRoutes } = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,7 +28,7 @@ app.use(helmet());
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 10000, // limit each IP to 10000 requests per windowMs (increased for development)
   message: {
     error: 'Too many requests from this IP, please try again later.'
   }

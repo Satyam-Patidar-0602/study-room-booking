@@ -161,7 +161,7 @@ const BookingSuccess = () => {
   const seats = Array.isArray(bookingDetails.seats) ? bookingDetails.seats.join(', ') : (bookingDetails.seats || 'N/A');
   const durationLabel =
     bookingDetails.duration === '4'
-      ? '4 Hours (Morning/Evening)'
+      ? '4 Hours(Morning/Evening)'
       : bookingDetails.duration === 'full'
       ? 'Full Time'
       : 'Custom Duration';

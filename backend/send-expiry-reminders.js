@@ -2,6 +2,8 @@ const nodemailer = require('nodemailer');
 const { getAll } = require('./database');
 require('dotenv').config();
 const cron = require('node-cron');
+const { expireOldBookings } = require('./routes/bookings');
+const db = require('./database');
 
 // Helper to calculate expiry date based on start_date and subscription_period
 function getExpiryDate(startDate, subscriptionPeriod) {
@@ -20,6 +22,8 @@ function formatDate(date) {
 }
 
 async function main() {
+  // First, expire old bookings
+  await expireOldBookings(db);
   // Find bookings expiring in 1 or 2 days
   const today = new Date();
   today.setHours(0,0,0,0);

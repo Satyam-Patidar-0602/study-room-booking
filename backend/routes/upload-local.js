@@ -154,4 +154,4 @@ router.get('/uploads/:filename', (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;

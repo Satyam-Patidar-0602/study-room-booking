@@ -11,7 +11,7 @@ const BookingIdCard = ({ bookingDetails }) => {
   const seats = Array.isArray(bookingDetails.seats) ? bookingDetails.seats.join(', ') : (bookingDetails.seats || 'N/A');
   const durationLabel =
     bookingDetails.duration === '4'
-      ? '4 Hours (Morning/Evening)'
+      ? '4 Hours(Morning/Evening)'
       : bookingDetails.duration === 'full'
       ? 'Full Time'
       : 'Custom Duration';
@@ -102,9 +102,9 @@ const BookingIdCard = ({ bookingDetails }) => {
             <label className="text-xs font-bold text-yellow-700 uppercase">Booking Date</label>
             <p className="text-sm font-semibold text-gray-800">{bookingDate}</p>
           </div>
-          <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+          <div className="bg-green-50 p-3 rounded-lg border border-green-200 max-w-sm">
             <label className="text-xs font-bold text-green-700 uppercase">Duration</label>
-            <p className="text-sm font-semibold text-gray-800">{durationLabel}</p>
+            <p className="text-xs font-semibold text-gray-800 break-words whitespace-normal leading-snug">{durationLabel}</p>
           </div>
           <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
             <label className="text-xs font-bold text-purple-700 uppercase">Seat(s)</label>

@@ -1,5 +1,5 @@
 const express = require('express');
-const { runQuery, getRow, getAll, runTransaction } = require('../database');
+const db = require('../database');
 const router = express.Router();
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
@@ -9,14 +9,11 @@ const path = require('path');
 // Get all students
 router.get('/students', async (req, res) => {
   try {
-    const students = await getAll(`
-      SELECT id, name, email, phone, created_at 
-      FROM users 
-      ORDER BY created_at DESC
-    `);
-    res.json({ success: true, students });
+    const result = await db.query(
+      'SELECT id, name, email, phone, created_at FROM users ORDER BY created_at DESC'
+    );
+    res.json({ success: true, students: result.rows });
   } catch (error) {
-    console.error('Error fetching students:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch students' });
   }
 });
@@ -25,26 +22,25 @@ router.get('/students', async (req, res) => {
 router.post('/students', async (req, res) => {
   try {
     const { name, email, phone } = req.body;
-    
     if (!name || !email) {
       return res.status(400).json({ success: false, error: 'Name and email are required' });
     }
-
-    const result = await runQuery(`
-      INSERT INTO users (name, email, phone) 
-      VALUES (?, ?, ?)
-    `, [name, email, phone]);
-
-    const student = await getRow('SELECT * FROM users WHERE id = ?', [result.lastID]);
-    
+    let student;
+    try {
+      const result = await db.query(
+        'INSERT INTO users (name, email, phone) VALUES ($1, $2, $3) RETURNING *',
+        [name, email, phone]
+      );
+      student = result.rows[0];
+    } catch (err) {
+      if (err.code === '23505') { // unique_violation
+        return res.status(400).json({ success: false, error: 'Email already exists' });
+      }
+      throw err;
+    }
     res.json({ success: true, student });
   } catch (error) {
-    console.error('Error adding student:', error);
-    if (error.message.includes('UNIQUE constraint failed')) {
-      res.status(400).json({ success: false, error: 'Email already exists' });
-    } else {
-      res.status(500).json({ success: false, error: 'Failed to add student' });
-    }
+    res.status(500).json({ success: false, error: 'Failed to add student' });
   }
 });
 
@@ -53,18 +49,13 @@ router.put('/students/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, phone } = req.body;
-    
-    await runQuery(`
-      UPDATE users 
-      SET name = ?, email = ?, phone = ? 
-      WHERE id = ?
-    `, [name, email, phone, id]);
-
-    const student = await getRow('SELECT * FROM users WHERE id = ?', [id]);
-    
-    res.json({ success: true, student });
+    await db.query(
+      'UPDATE users SET name = $1, email = $2, phone = $3 WHERE id = $4',
+      [name, email, phone, id]
+    );
+    const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+    res.json({ success: true, student: result.rows[0] });
   } catch (error) {
-    console.error('Error updating student:', error);
     res.status(500).json({ success: false, error: 'Failed to update student' });
   }
 });
@@ -73,21 +64,17 @@ router.put('/students/:id', async (req, res) => {
 router.delete('/students/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
     // Check if student has any bookings
-    const bookings = await getAll('SELECT id FROM bookings WHERE user_id = ?', [id]);
-    if (bookings.length > 0) {
+    const bookings = await db.query('SELECT id FROM bookings WHERE user_id = $1', [id]);
+    if (bookings.rows.length > 0) {
       return res.status(400).json({ 
         success: false, 
         error: 'Cannot delete student with existing bookings' 
       });
     }
-
-    await runQuery('DELETE FROM users WHERE id = ?', [id]);
-    
+    await db.query('DELETE FROM users WHERE id = $1', [id]);
     res.json({ success: true, message: 'Student deleted successfully' });
   } catch (error) {
-    console.error('Error deleting student:', error);
     res.status(500).json({ success: false, error: 'Failed to delete student' });
   }
 });
@@ -95,7 +82,7 @@ router.delete('/students/:id', async (req, res) => {
 // Get all bookings with user and seat details
 router.get('/bookings', async (req, res) => {
   try {
-    const bookings = await getAll(`
+    const result = await db.query(`
       SELECT 
         b.id,
         b.user_id,
@@ -108,18 +95,18 @@ router.get('/bookings', async (req, res) => {
         b.status,
         b.payment_status,
         b.created_at,
+        b.updated_at,
         u.name as user_name,
         u.email as user_email,
         u.phone as user_phone,
         s.seat_number
       FROM bookings b
       JOIN users u ON b.user_id = u.id
-      JOIN seats s ON b.seat_id = s.id
+      LEFT JOIN seats s ON b.seat_id = s.id
       ORDER BY b.created_at DESC
     `);
-    res.json({ success: true, bookings });
+    res.json({ success: true, bookings: result.rows });
   } catch (error) {
-    console.error('Error fetching bookings:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch bookings' });
   }
 });
@@ -127,63 +114,43 @@ router.get('/bookings', async (req, res) => {
 // Add new booking
 router.post('/bookings', async (req, res) => {
   try {
-    const { 
-      studentId, 
-      seatId, 
-      startDate, 
-      endDate, 
-      duration, 
-      subscriptionPeriod, 
-      totalAmount, 
-      paymentStatus 
-    } = req.body;
-    
+    const { studentId, seatId, startDate, endDate, duration, subscriptionPeriod, totalAmount, paymentStatus } = req.body;
     if (!studentId || !seatId || !startDate || !endDate || !totalAmount) {
       return res.status(400).json({ success: false, error: 'All fields are required' });
     }
-
-    // Check if seat is available for the specific duration type
     const durationType = duration === 'full' ? 'fulltime' : '4hours';
-    const seat = await getRow(`
-      SELECT s.id, s.seat_number,
+    // Check if seat is available for the specific duration type
+    const seatResult = await db.query(
+      `SELECT s.id, s.seat_number,
         CASE 
-          WHEN b.id IS NOT NULL AND b.status = 'active' AND b.duration_type = ? THEN 'booked'
+          WHEN b.id IS NOT NULL AND b.status = 'active' AND b.duration_type = $1 THEN 'booked'
           ELSE 'available'
         END as status
       FROM seats s
-      LEFT JOIN bookings b ON s.id = b.seat_id AND b.status = 'active' AND b.duration_type = ?
-      WHERE s.id = ?
-    `, [durationType, durationType, seatId]);
-    
+      LEFT JOIN bookings b ON s.id = b.seat_id AND b.status = 'active' AND b.duration_type = $1
+      WHERE s.id = $2`,
+      [durationType, seatId]
+    );
+    const seat = seatResult.rows[0];
     if (!seat) {
       return res.status(400).json({ success: false, error: 'Seat not found' });
     }
-    
     if (seat.status !== 'available') {
       return res.status(400).json({ success: false, error: 'Seat is not available for this duration type' });
     }
-
     // Check if student exists
-    const student = await getRow('SELECT id FROM users WHERE id = ?', [studentId]);
-    if (!student) {
+    const studentResult = await db.query('SELECT id FROM users WHERE id = $1', [studentId]);
+    if (studentResult.rows.length === 0) {
       return res.status(400).json({ success: false, error: 'Student not found' });
     }
-
     // Create booking
-    let bookingResult;
-    try {
-      bookingResult = await runQuery(`
-        INSERT INTO bookings (user_id, seat_id, start_date, start_time, duration_type, subscription_period, total_amount, status, payment_status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [studentId, seatId, startDate, '09:00', duration === 'full' ? 'fulltime' : '4hours', subscriptionPeriod, totalAmount, 'active', paymentStatus]);
-    } catch (insertErr) {
-      console.error('Error during booking insert:', insertErr);
-      return res.status(500).json({ success: false, error: 'Failed to insert booking', details: insertErr.message });
-    }
-
-    // Defensive: always fetch booking after insert
-    const bookingFull = await getRow(`
-      SELECT 
+    const bookingResult = await db.query(
+      `INSERT INTO bookings (user_id, seat_id, start_date, start_time, duration_type, subscription_period, total_amount, status, payment_status) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [studentId, seatId, startDate, '09:00', durationType, subscriptionPeriod, totalAmount, 'active', paymentStatus]
+    );
+    const bookingFullResult = await db.query(
+      `SELECT 
         b.id,
         b.start_date,
         b.start_time,
@@ -200,16 +167,11 @@ router.post('/bookings', async (req, res) => {
       FROM bookings b
       JOIN users u ON b.user_id = u.id
       JOIN seats s ON b.seat_id = s.id
-      WHERE b.id = ?
-    `, [bookingResult.id]);
-    if (!bookingFull) {
-      console.error('Booking not found after insert, id:', bookingResult.id);
-      return res.status(500).json({ success: false, error: 'Booking not found after insert.' });
-    }
-    // No backend PDF/email needed; handled by frontend
-    res.json({ success: true, booking: bookingFull });
+      WHERE b.id = $1`,
+      [bookingResult.rows[0].id]
+    );
+    res.json({ success: true, booking: bookingFullResult.rows[0] });
   } catch (error) {
-    console.error('Error adding booking:', error);
     res.status(500).json({ success: false, error: 'Failed to add booking' });
   }
 });
@@ -232,16 +194,18 @@ router.post('/assign-seat', async (req, res) => {
     }
 
     // Check if seat is available for the specific duration type
-    const seat = await getRow(`
-      SELECT s.id, s.seat_number,
+    const seatResult = await db.query(
+      `SELECT s.id, s.seat_number,
         CASE 
-          WHEN b.id IS NOT NULL AND b.status = 'active' AND b.duration_type = ? THEN 'booked'
+          WHEN b.id IS NOT NULL AND b.status = 'active' AND b.duration_type = $1 THEN 'booked'
           ELSE 'available'
         END as status
       FROM seats s
-      LEFT JOIN bookings b ON s.id = b.seat_id AND b.status = 'active' AND b.duration_type = ?
-      WHERE s.id = ?
-    `, [durationType, durationType, seatId]);
+      LEFT JOIN bookings b ON s.id = b.seat_id AND b.status = 'active' AND b.duration_type = $1
+      WHERE s.id = $2`,
+      [durationType, seatId]
+    );
+    const seat = seatResult.rows[0];
     
     if (!seat) {
       return res.status(400).json({ success: false, error: 'Seat not found' });
@@ -252,19 +216,21 @@ router.post('/assign-seat', async (req, res) => {
     }
 
     // Check if student exists
-    const student = await getRow('SELECT * FROM users WHERE id = ?', [studentId]);
+    const studentResult = await db.query('SELECT * FROM users WHERE id = $1', [studentId]);
+    const student = studentResult.rows[0];
     if (!student) {
       return res.status(400).json({ success: false, error: 'Student not found' });
     }
 
     // Create booking
-    const bookingResult = await runQuery(`
-      INSERT INTO bookings (user_id, seat_id, start_date, start_time, duration_type, subscription_period, total_amount, status, payment_status) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [studentId, seatId, startDate, startTime, durationType, subscriptionPeriod, totalAmount, 'active', 'paid']);
+    const bookingResult = await db.query(
+      `INSERT INTO bookings (user_id, seat_id, start_date, start_time, duration_type, subscription_period, total_amount, status, payment_status) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [studentId, seatId, startDate, startTime, durationType, subscriptionPeriod, totalAmount, 'active', 'paid']
+    );
 
-    const booking = await getRow(`
-      SELECT 
+    const booking = await db.query(
+      `SELECT 
         b.id,
         b.start_date,
         b.start_time,
@@ -281,8 +247,9 @@ router.post('/assign-seat', async (req, res) => {
       FROM bookings b
       JOIN users u ON b.user_id = u.id
       JOIN seats s ON b.seat_id = s.id
-      WHERE b.id = ?
-    `, [bookingResult.lastID]);
+      WHERE b.id = $1`,
+      [bookingResult.rows[0].id]
+    );
 
     // Send email notification
     try {
@@ -310,18 +277,34 @@ router.post('/assign-seat', async (req, res) => {
         Study Room Management Team
       `;
 
-      // Here you would integrate with your email service
-      // For now, we'll just log the email details
-      // await sendEmail(student.email, emailSubject, emailBody);
+      // Set up Nodemailer transporter
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER || 'thestudypointlibraryjeeran@gmail.com',
+          pass: process.env.SMTP_PASS || 'your_app_password_here', // Set this in your .env
+        },
+      });
+
+      // Compose email
+      const mailOptions = {
+        from: `Study Point Library <${process.env.SMTP_USER || 'thestudypointlibraryjeeran@gmail.com'}>`,
+        to: student.email,
+        subject: emailSubject,
+        text: emailBody,
+      };
+
+      await transporter.sendMail(mailOptions);
 
     } catch (emailError) {
       console.error('Error sending email notification:', emailError);
       // Don't fail the request if email fails
     }
     
-    res.json({ success: true, booking });
+    res.json({ success: true, booking: booking.rows[0] });
   } catch (error) {
-    console.error('Error assigning seat:', error);
     res.status(500).json({ success: false, error: 'Failed to assign seat' });
   }
 });
@@ -330,23 +313,28 @@ router.post('/assign-seat', async (req, res) => {
 router.put('/bookings/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      startDate, 
-      duration, 
-      subscriptionPeriod, 
-      totalAmount, 
-      paymentStatus,
-      status
-    } = req.body;
-    
-    await runQuery(`
-      UPDATE bookings 
-      SET start_date = ?, duration_type = ?, subscription_period = ?, total_amount = ?, payment_status = ?, status = ? 
-      WHERE id = ?
-    `, [startDate, duration === 'full' ? 'fulltime' : '4hours', subscriptionPeriod, totalAmount, paymentStatus, status || 'active', id]);
-
-    const booking = await getRow(`
-      SELECT 
+    const allowedFields = {
+      start_date: req.body.startDate,
+      duration_type: req.body.duration ? (req.body.duration === 'full' ? 'fulltime' : '4hours') : undefined,
+      subscription_period: req.body.subscriptionPeriod,
+      total_amount: req.body.totalAmount,
+      payment_status: req.body.paymentStatus,
+      status: req.body.status,
+      seat_id: req.body.seatId
+    };
+    // Filter out undefined fields
+    const fieldsToUpdate = Object.entries(allowedFields).filter(([_, v]) => v !== undefined);
+    if (fieldsToUpdate.length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid fields provided for update' });
+    }
+    // Build dynamic SQL
+    const setClause = fieldsToUpdate.map(([k], i) => `${k} = $${i + 1}`).join(', ');
+    const values = fieldsToUpdate.map(([_, v]) => v);
+    values.push(id);
+    const sql = `UPDATE bookings SET ${setClause} WHERE id = $${fieldsToUpdate.length + 1}`;
+    await db.query(sql, values);
+    const result = await db.query(
+      `SELECT 
         b.id,
         b.start_date,
         b.start_time,
@@ -363,12 +351,11 @@ router.put('/bookings/:id', async (req, res) => {
       FROM bookings b
       JOIN users u ON b.user_id = u.id
       JOIN seats s ON b.seat_id = s.id
-      WHERE b.id = ?
-    `, [id]);
-    
-    res.json({ success: true, booking });
+      WHERE b.id = $1`,
+      [id]
+    );
+    res.json({ success: true, booking: result.rows[0] });
   } catch (error) {
-    console.error('Error updating booking:', error);
     res.status(500).json({ success: false, error: 'Failed to update booking' });
   }
 });
@@ -379,25 +366,61 @@ router.delete('/bookings/:id', async (req, res) => {
     const { id } = req.params;
     
     // Get booking details to free up the seat
-    const booking = await getRow('SELECT seat_id FROM bookings WHERE id = ?', [id]);
-    if (!booking) {
+    const booking = await db.query('SELECT seat_id FROM bookings WHERE id = $1', [id]);
+    if (booking.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
     // Delete booking
-    await runQuery('DELETE FROM bookings WHERE id = ?', [id]);
+    await db.query('DELETE FROM bookings WHERE id = $1', [id]);
     
     res.json({ success: true, message: 'Booking deleted successfully' });
   } catch (error) {
-    console.error('Error deleting booking:', error);
     res.status(500).json({ success: false, error: 'Failed to delete booking' });
+  }
+});
+
+// Cleanup all bookings
+router.post('/cleanup-bookings', async (req, res) => {
+  try {
+    await db.query('DELETE FROM bookings');
+    res.json({ success: true, message: 'All bookings deleted.' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to clean bookings.' });
+  }
+});
+// Cleanup all users
+router.post('/cleanup-users', async (req, res) => {
+  try {
+    await db.query('DELETE FROM users');
+    res.json({ success: true, message: 'All users deleted.' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to clean users.' });
+  }
+});
+// Cleanup all expenses
+router.post('/cleanup-expenses', async (req, res) => {
+  try {
+    await db.query('DELETE FROM expenses');
+    res.json({ success: true, message: 'All expenses deleted.' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to clean expenses.' });
+  }
+});
+// Cleanup all seats
+router.post('/cleanup-seats', async (req, res) => {
+  try {
+    await db.query('DELETE FROM seats');
+    res.json({ success: true, message: 'All seats deleted.' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to clean seats.' });
   }
 });
 
 // Get all seats with booking status
 router.get('/seats', async (req, res) => {
   try {
-    const seats = await getAll(`
+    const result = await db.query(`
       SELECT 
         s.id, 
         s.seat_number, 
@@ -416,174 +439,22 @@ router.get('/seats', async (req, res) => {
       LEFT JOIN bookings b_ft ON s.id = b_ft.seat_id AND b_ft.status = 'active' AND b_ft.duration_type = 'fulltime'
       ORDER BY s.seat_number
     `);
-    res.json({ success: true, seats });
+    res.json({ success: true, seats: result.rows });
   } catch (error) {
-    console.error('Error fetching seats:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch seats' });
   }
 });
 
-// Add new seat
-router.post('/seats', async (req, res) => {
-  try {
-    const { seatNumber, status } = req.body;
-    
-    if (!seatNumber) {
-      return res.status(400).json({ success: false, error: 'Seat number is required' });
-    }
-
-    // Check if seat number already exists
-    const existingSeat = await getRow('SELECT id FROM seats WHERE seat_number = ?', [seatNumber]);
-    if (existingSeat) {
-      return res.status(400).json({ success: false, error: 'Seat number already exists' });
-    }
-
-    const result = await runQuery(`
-      INSERT INTO seats (seat_number, status) 
-      VALUES (?, ?)
-    `, [seatNumber, status || 'available']);
-
-    const seat = await getRow('SELECT * FROM seats WHERE id = ?', [result.lastID]);
-    
-    res.json({ success: true, seat });
-  } catch (error) {
-    console.error('Error adding seat:', error);
-    res.status(500).json({ success: false, error: 'Failed to add seat' });
-  }
-});
-
-// Update seat
-router.put('/seats/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-    
-    await runQuery('UPDATE seats SET status = ? WHERE id = ?', [status, id]);
-
-    const seat = await getRow('SELECT * FROM seats WHERE id = ?', [id]);
-    
-    res.json({ success: true, seat });
-  } catch (error) {
-    console.error('Error updating seat:', error);
-    res.status(500).json({ success: false, error: 'Failed to update seat' });
-  }
-});
-
-// Delete seat
-router.delete('/seats/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Check if seat has any bookings
-    const bookings = await getAll('SELECT id FROM bookings WHERE seat_id = ?', [id]);
-    if (bookings.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Cannot delete seat with existing bookings' 
-      });
-    }
-
-    await runQuery('DELETE FROM seats WHERE id = ?', [id]);
-    
-    res.json({ success: true, message: 'Seat deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting seat:', error);
-    res.status(500).json({ success: false, error: 'Failed to delete seat' });
-  }
-});
-
-// Expenses endpoints
 // Get all expenses
 router.get('/expenses', async (req, res) => {
   try {
-    const expenses = await getAll('SELECT * FROM expenses ORDER BY created_at DESC');
-    res.json({ success: true, expenses });
+    const result = await db.query('SELECT * FROM expenses ORDER BY created_at DESC');
+    res.json({ success: true, expenses: result.rows });
   } catch (error) {
-    console.error('Error fetching expenses:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch expenses' });
   }
 });
-// Add new expense
-router.post('/expenses', async (req, res) => {
-  try {
-    const { amount, description, admin_name } = req.body;
-    if (!amount || !description || !admin_name) {
-      return res.status(400).json({ success: false, error: 'All fields are required' });
-    }
-    const result = await runQuery(
-      'INSERT INTO expenses (amount, description, admin_name) VALUES (?, ?, ?)',
-      [amount, description, admin_name]
-    );
-    const expense = await getRow('SELECT * FROM expenses WHERE id = ?', [result.lastID]);
-    res.json({ success: true, expense });
-  } catch (error) {
-    console.error('Error adding expense:', error);
-    res.status(500).json({ success: false, error: 'Failed to add expense' });
-  }
-});
 
-// Clean all bookings
-router.post('/cleanup-bookings', async (req, res) => {
-  try {
-    await runQuery('DELETE FROM bookings');
-    await runQuery('DELETE FROM sqlite_sequence WHERE name = "bookings"');
-    res.json({ success: true, message: 'All bookings deleted.' });
-  } catch (error) {
-    console.error('Error cleaning bookings:', error);
-    res.status(500).json({ success: false, error: 'Failed to clean bookings' });
-  }
-});
-
-// Clean all users
-router.post('/cleanup-users', async (req, res) => {
-  try {
-    await runQuery('DELETE FROM users');
-    await runQuery('DELETE FROM sqlite_sequence WHERE name = "users"');
-    res.json({ success: true, message: 'All users deleted.' });
-  } catch (error) {
-    console.error('Error cleaning users:', error);
-    res.status(500).json({ success: false, error: 'Failed to clean users' });
-  }
-});
-
-// Clean all expenses
-router.post('/cleanup-expenses', async (req, res) => {
-  try {
-    await runQuery('DELETE FROM expenses');
-    await runQuery('DELETE FROM sqlite_sequence WHERE name = "expenses"');
-    res.json({ success: true, message: 'All expenses deleted.' });
-  } catch (error) {
-    console.error('Error cleaning expenses:', error);
-    res.status(500).json({ success: false, error: 'Failed to clean expenses' });
-  }
-});
-
-// Database cleanup
-router.post('/cleanup-db', async (req, res) => {
-  try {
-    await runTransaction(async () => {
-      await runQuery('DELETE FROM bookings');
-      await runQuery('DELETE FROM users');
-      await runQuery('DELETE FROM sqlite_sequence WHERE name IN ("bookings", "users")');
-    });
-    
-    res.json({ success: true, message: 'Database cleaned successfully' });
-  } catch (error) {
-    console.error('Error cleaning database:', error);
-    res.status(500).json({ success: false, error: 'Failed to clean database' });
-  }
-});
-
-router.post('/cleanup-seats', async (req, res) => {
-  try {
-    await runQuery('DELETE FROM bookings');
-    await runQuery('DELETE FROM sqlite_sequence WHERE name = "bookings"');
-    res.json({ success: true, message: 'All seat bookings deleted. Seats remain.' });
-  } catch (error) {
-    console.error('Error cleaning seat bookings:', error);
-    res.status(500).json({ success: false, error: 'Failed to clean seat bookings' });
-  }
-});
-
-
-module.exports = router; 
+module.exports = {
+  router
+};

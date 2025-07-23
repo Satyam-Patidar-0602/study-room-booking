@@ -39,7 +39,6 @@ const AdminDashboard = () => {
   // Form states
   const [showAddStudent, setShowAddStudent] = useState(false)
   const [showAddBooking, setShowAddBooking] = useState(false)
-  const [showSeatAssignment, setShowSeatAssignment] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   
   // Search and filter states
@@ -53,6 +52,7 @@ const AdminDashboard = () => {
     phone: ''
   })
   
+  // Restore paymentStatus in bookingForm state
   const [bookingForm, setBookingForm] = useState({
     studentId: '',
     seatId: '',
@@ -61,16 +61,7 @@ const AdminDashboard = () => {
     subscriptionPeriod: '1',
     totalAmount: '',
     paymentStatus: 'pending'
-  })
-
-  const [seatAssignmentForm, setSeatAssignmentForm] = useState({
-    studentId: '',
-    seatId: '',
-    assignmentType: 'morning', // morning, evening, fulltime
-    startDate: '',
-    subscriptionPeriod: '1',
-    totalAmount: ''
-  })
+  });
 
   const [seatFilter, setSeatFilter] = useState('booked');
 
@@ -96,6 +87,14 @@ const AdminDashboard = () => {
   const BOOKINGS_PER_PAGE = 10
   const [showPastBookings, setShowPastBookings] = useState(false)
 
+  // Add filter state for bookings tab
+  const [bookingView, setBookingView] = useState('current'); // 'current' or 'past'
+  // Add payment status filter state
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
+
+  // 1. Add state for the booking being assigned a seat
+  const [assignSeatBooking, setAssignSeatBooking] = useState(null);
+  const [assignSeatId, setAssignSeatId] = useState("");
 
   // Fetch all data on component mount
   useEffect(() => {
@@ -118,26 +117,28 @@ const AdminDashboard = () => {
 
   // Lock background scroll when any modal is open
   useEffect(() => {
-    if (showAddStudent || showAddBooking || showSeatAssignment || editingItem) {
+    if (showAddStudent || showAddBooking || editingItem) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [showAddStudent, showAddBooking, showSeatAssignment, editingItem]);
+  }, [showAddStudent, showAddBooking, editingItem]);
 
   const fetchAllData = async () => {
     setLoading(true)
     try {
-      const [studentsRes, bookingsRes, seatsRes] = await Promise.all([
+      const [studentsRes, bookingsRes, seatsRes, expensesRes] = await Promise.all([
         api.get('/admin/students'),
         api.get('/admin/bookings'),
-        api.get('/admin/seats')
+        api.get('/admin/seats'),
+        api.get('/admin/expenses')
       ])
       
       setStudents(studentsRes.data.students || [])
       setBookings(bookingsRes.data.bookings || [])
       setSeats(seatsRes.data.seats || [])
+      setExpenses(expensesRes.data.expenses || [])
     } catch (error) {
       toast.error('Failed to fetch data')
     } finally {
@@ -176,7 +177,8 @@ const AdminDashboard = () => {
       
       const bookingData = {
         ...bookingForm,
-        endDate: endDate.toISOString().split('T')[0]
+        endDate: endDate.toISOString().split('T')[0],
+        payment_status: bookingForm.paymentStatus // Use the paymentStatus from bookingForm
       };
       
       const response = await api.post('/admin/bookings', bookingData)
@@ -190,14 +192,17 @@ const AdminDashboard = () => {
         totalAmount: '',
         paymentStatus: 'pending'
       })
-      // Send beautiful ID card PDF to student
+      setShowAddBooking(false);
+      setActiveTab('bookings');
+      toast.success('Booking added successfully');
+      // Send beautiful ID card PDF to student (do not await)
       const student = students.find(s => String(s.id) === String(bookingForm.studentId));
       if (!student || !student.email) {
         toast.error('Student not found or missing email');
         return;
       }
       const seat = seats.find(s => s.id === bookingForm.seatId)
-      await sendBookingIdCardPDF({
+      sendBookingIdCardPDF({
         bookingDetails: {
           name: student.name,
           email: student.email,
@@ -211,62 +216,10 @@ const AdminDashboard = () => {
         email: student.email,
         onComplete: () => toast.success('ID Card emailed to student!'),
       });
-      setShowAddBooking(false)
-      toast.success('Booking added successfully')
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to add booking')
     }
   }
-
-  // Assign seat to student
-  const handleSeatAssignment = async (e) => {
-    e.preventDefault()
-    try {
-      // Determine start time based on assignment type
-      let startTime = '09:00';
-      let durationType = '4hours';
-      
-      if (seatAssignmentForm.assignmentType === 'morning') {
-        startTime = '09:00';
-        durationType = '4hours';
-      } else if (seatAssignmentForm.assignmentType === 'evening') {
-        startTime = '14:00';
-        durationType = '4hours';
-      } else if (seatAssignmentForm.assignmentType === 'fulltime') {
-        startTime = '09:00';
-        durationType = 'fulltime';
-      }
-
-      const bookingData = {
-        studentId: seatAssignmentForm.studentId,
-        seatId: seatAssignmentForm.seatId,
-        startDate: seatAssignmentForm.startDate,
-        startTime: startTime,
-        durationType: durationType,
-        subscriptionPeriod: seatAssignmentForm.subscriptionPeriod,
-        totalAmount: seatAssignmentForm.totalAmount,
-        paymentStatus: 'completed'
-      };
-
-      const response = await api.post('/admin/assign-seat', bookingData)
-      setBookings(prev => [...prev, response.data.booking])
-      setSeatAssignmentForm({
-        studentId: '',
-        seatId: '',
-        assignmentType: '4hours',
-        startDate: '',
-        subscriptionPeriod: '1',
-        totalAmount: ''
-      })
-      setAssignmentStep(1)
-      setShowSeatAssignment(false)
-      toast.success('Seat assigned successfully! Email notification sent to student.')
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to assign seat')
-    }
-  }
-
-
 
   // Update item
   const handleUpdate = async (type, id, data) => {
@@ -328,16 +281,52 @@ const AdminDashboard = () => {
     )
   )
 
+  // Helper: Check if a booking is currently active (today is between start_date and expiry_date)
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const isBookingActive = (booking) => {
+    const start = new Date(booking.start_date);
+    start.setHours(0,0,0,0);
+    const expiry = getExpiryDate(booking.start_date, booking.subscription_period);
+    expiry.setHours(0,0,0,0);
+    return today >= start && today <= expiry;
+  };
+  const isBookingExpired = (booking) => {
+    const expiry = getExpiryDate(booking.start_date, booking.subscription_period);
+    expiry.setHours(0,0,0,0);
+    return today > expiry;
+  };
+
+  // Helper: Calculate expiry date for a booking
+  function getExpiryDate(startDate, subscriptionPeriod) {
+    const start = new Date(startDate);
+    if (subscriptionPeriod === '0.5') {
+      start.setDate(start.getDate() + 14); // 15 days total
+    } else {
+      start.setMonth(start.getMonth() + 1);
+      start.setDate(start.getDate() - 1); // 1 month (inclusive)
+    }
+    return start;
+  }
+
+  // Update filter logic for current bookings to include both current and upcoming bookings
+  const isBookingCurrentOrUpcoming = (booking) => {
+    const expiry = getExpiryDate(booking.start_date, booking.subscription_period);
+    expiry.setHours(0,0,0,0);
+    return today <= expiry;
+  };
+
   // Filtered bookings for table
   const filteredBookings = bookings.filter(booking => {
     if (!booking) return false;
-    if (!showPastBookings && booking.status !== 'active') return false;
+    if (bookingView === 'current' && !isBookingCurrentOrUpcoming(booking)) return false;
+    if (bookingView === 'past' && !isBookingExpired(booking)) return false;
+    if (paymentStatusFilter !== 'all' && booking.payment_status !== paymentStatusFilter) return false;
     const matchesSearch = 
       (booking.user_name && booking.user_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (booking.seat_number && booking.seat_number.toString().includes(searchTerm))
-    const matchesFilter = filterStatus === 'all' || booking.payment_status === filterStatus
-    return matchesSearch && matchesFilter
-  })
+      (booking.seat_number ? booking.seat_number.toString().includes(searchTerm) : 'no seat'.includes(searchTerm.toLowerCase()));
+    return matchesSearch;
+  });
   // Defensive: filter out undefined/null before paginating
   const paginatedBookings = filteredBookings.filter(Boolean).slice((bookingPage-1)*BOOKINGS_PER_PAGE, bookingPage*BOOKINGS_PER_PAGE)
   const totalBookingPages = Math.ceil(filteredBookings.length / BOOKINGS_PER_PAGE)
@@ -374,91 +363,43 @@ const AdminDashboard = () => {
     )
   }
 
-  function handleCleanBookings() { toast.error('Not implemented yet'); }
-  function handleCleanUsers() { toast.error('Not implemented yet'); }
-  function handleCleanExpenses() { toast.error('Not implemented yet'); }
-
-  const CLEANUP_PASSWORD = 'cleanup'; // Replace with env/secure method in production
-
-  async function handleCleanSeats() {
-    const pwd = document.getElementById('cleanup-password')?.value || '';
-    if (!pwd) {
-      toast.error('Please enter the admin password below to clean all seat bookings.');
-      return;
-    }
-    if (pwd !== CLEANUP_PASSWORD) {
-      toast.error('Incorrect password. Cleanup cancelled.');
-      return;
-    }
-    toast('Cleaning all seat bookings...', { icon: '🧹' });
+  // Implement working cleanup functions
+  const handleCleanBookings = async () => {
     try {
-      const res = await api.post('/admin/cleanup-seats');
-      toast.success(res.data.message || 'All seat bookings deleted.');
+      await api.post('/admin/cleanup-bookings');
+      toast.success('All bookings deleted!');
       fetchAllData();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to clean seat bookings');
+      toast.error('Failed to clean bookings');
     }
-  }
-
-  async function handleCleanBookings() {
-    const pwd = document.getElementById('cleanup-password')?.value || '';
-    if (!pwd) {
-      toast.error('Please enter the admin password below to clean all bookings.');
-      return;
-    }
-    if (pwd !== CLEANUP_PASSWORD) {
-      toast.error('Incorrect password. Cleanup cancelled.');
-      return;
-    }
-    toast('Cleaning all bookings...', { icon: '🧹' });
+  };
+  const handleCleanUsers = async () => {
     try {
-      const res = await api.post('/admin/cleanup-bookings');
-      toast.success(res.data.message || 'All bookings deleted.');
+      await api.post('/admin/cleanup-users');
+      toast.success('All users deleted!');
       fetchAllData();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to clean bookings');
+      toast.error('Failed to clean users');
     }
-  }
-
-  async function handleCleanUsers() {
-    const pwd = document.getElementById('cleanup-password')?.value || '';
-    if (!pwd) {
-      toast.error('Please enter the admin password below to clean all users.');
-      return;
-    }
-    if (pwd !== CLEANUP_PASSWORD) {
-      toast.error('Incorrect password. Cleanup cancelled.');
-      return;
-    }
-    toast('Cleaning all users...', { icon: '🧹' });
+  };
+  const handleCleanExpenses = async () => {
     try {
-      const res = await api.post('/admin/cleanup-users');
-      toast.success(res.data.message || 'All users deleted.');
+      await api.post('/admin/cleanup-expenses');
+      toast.success('All expenses deleted!');
       fetchAllData();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to clean users');
+      toast.error('Failed to clean expenses');
     }
-  }
-
-  async function handleCleanExpenses() {
-    const pwd = document.getElementById('cleanup-password')?.value || '';
-    if (!pwd) {
-      toast.error('Please enter the admin password below to clean all expenses.');
-      return;
-    }
-    if (pwd !== CLEANUP_PASSWORD) {
-      toast.error('Incorrect password. Cleanup cancelled.');
-      return;
-    }
-    toast('Cleaning all expenses...', { icon: '🧹' });
+  };
+  const handleCleanSeats = async () => {
     try {
-      const res = await api.post('/admin/cleanup-expenses');
-      toast.success(res.data.message || 'All expenses deleted.');
+      await api.post('/admin/cleanup-seats');
+      toast.success('All seats deleted!');
       fetchAllData();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to clean expenses');
+      toast.error('Failed to clean seats');
     }
-  }
+  };
 
   // Utility to get today's date in YYYY-MM-DD format
   const getToday = () => {
@@ -469,18 +410,12 @@ const AdminDashboard = () => {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // Utility to get expiry date from start_date and subscription_period
-  const getExpiryDate = (startDate, subscriptionPeriod) => {
-    if (!startDate || !subscriptionPeriod) return '-';
-    const start = new Date(startDate);
-    if (subscriptionPeriod === '0.5') {
-      start.setDate(start.getDate() + 14);
-    } else if (subscriptionPeriod === '1') {
-      start.setMonth(start.getMonth() + 1);
-      start.setDate(start.getDate() - 1);
-    }
-    return start.toISOString().split('T')[0];
-  };
+  // Helper: Get bookings needing seat assignment (4-hour, paid, no seat assigned)
+  const bookingsNeedingAssignment = bookings.filter(b =>
+    b.duration_type === '4hours' &&
+    b.payment_status === 'paid' &&
+    (!b.seat_id || b.seat_id === null)
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -692,8 +627,8 @@ const AdminDashboard = () => {
         {activeTab === 'bookings' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-              <div className="flex space-x-4">
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
@@ -705,13 +640,21 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
+                  value={paymentStatusFilter}
+                  onChange={e => setPaymentStatusFilter(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
-                  <option value="all">All Status</option>
+                  <option value="all">All Payments</option>
+                  <option value="paid">Paid</option>
                   <option value="pending">Pending</option>
-                  <option value="paid">Paid Cash</option>
+                </select>
+                <select
+                  value={bookingView}
+                  onChange={e => setBookingView(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="current">Current Bookings</option>
+                  <option value="past">Past Bookings</option>
                 </select>
                 <button
                   onClick={() => setShowPastBookings(v => !v)}
@@ -730,65 +673,54 @@ const AdminDashboard = () => {
             </div>
 
             {/* Bookings Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seat</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {paginatedBookings.filter(Boolean).map((booking) => (
-                      <tr key={booking.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
+            <div className="bg-white rounded-lg shadow overflow-x-auto relative">
+              {/* Horizontal scroll shadow */}
+              <div className="pointer-events-none absolute top-0 right-0 h-full w-6 bg-gradient-to-l from-white to-transparent z-10" />
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-20">Student</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seat</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-20">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedBookings.filter(Boolean).map((booking) => {
+                    const needsAssignment = booking.duration_type === '4hours' && booking.payment_status === 'paid' && (!booking.seat_id || booking.seat_id === null);
+                    return (
+                      <tr key={booking.id} className={needsAssignment ? 'bg-yellow-50' : ''}>
+                        {/* Student (sticky) */}
+                        <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10 min-w-[180px]">
                           <div className="text-sm font-medium text-gray-900">{booking.user_name}</div>
-                          <div className="text-sm text-gray-500">{booking.user_email}</div>
+                          <div className="text-xs text-gray-500">{booking.user_email}</div>
+                          {needsAssignment && (
+                            <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-yellow-200 text-yellow-900 font-semibold">Needs Assignment</span>
+                          )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {booking.user_phone || '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          Seat {booking.seat_number}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {booking.start_date}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {booking.end_date || booking.expiry_date || getExpiryDate(booking.start_date, booking.subscription_period) || '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {booking.status || '-'}
-                        </td>
+                        {/* Mobile */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{booking.user_phone || '-'}</td>
+                        {/* Seat */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{booking.seat_number ? `Seat ${booking.seat_number}` : <span className="text-red-500">Unassigned</span>}</td>
+                        {/* Type */}
+                        <td className="px-6 py-4 break-words whitespace-normal text-xs text-gray-900">{booking.duration_type === 'fulltime' ? 'Full Time' : '4 Hours (Morning/Evening)'}</td>
+                        {/* Start Date */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{booking.start_date}</td>
+                        {/* Expiry */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{booking.end_date
+  ? booking.end_date
+  : getExpiryDate(booking.start_date, booking.subscription_period).toISOString().split('T')[0]}</td>
+                        {/* Payment */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{booking.duration_type === 'fulltime' ? 'Full Time' : '4 Hours'}</div>
-                          <div className="text-sm text-gray-500">{booking.subscription_period} month</div>
+                          <span className={`px-2 py-1 text-xs rounded-full ${booking.payment_status === 'completed' || booking.payment_status === 'paid' ? 'bg-green-100 text-green-800' : booking.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{booking.payment_status}</span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          ₹{booking.total_amount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            booking.payment_status === 'completed' 
-                              ? 'bg-green-100 text-green-800' 
-                              : booking.payment_status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {booking.payment_status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
+                        {/* Actions (sticky) */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium sticky right-0 bg-white z-10 min-w-[140px]">
+                          <div className="flex flex-wrap gap-2">
                             <button
                               onClick={() => setEditingItem({ type: 'bookings', data: booking })}
                               className="text-indigo-600 hover:text-indigo-900"
@@ -801,34 +733,36 @@ const AdminDashboard = () => {
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
+                            {booking.status === 'active' && needsAssignment && (
+                              <button
+                                onClick={() => { setAssignSeatBooking(booking); setAssignSeatId(""); }}
+                                className="text-green-600 hover:text-green-900 font-semibold border border-green-200 rounded px-2 py-1 bg-green-50"
+                              >
+                                Assign Seat
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
             {/* Pagination Controls */}
-            <div className="flex justify-between items-center mt-4">
-              <span className="text-sm text-gray-600">
-                Page {bookingPage} of {totalBookingPages}
-              </span>
+            <div className="flex justify-between items-center mt-4 flex-wrap gap-2">
+              <span className="text-sm text-gray-600">Page {bookingPage} of {totalBookingPages}</span>
               <div className="space-x-2">
                 <button
                   onClick={() => setBookingPage(p => Math.max(1, p-1))}
                   disabled={bookingPage === 1}
                   className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50"
-                >
-                  Previous
-                </button>
+                >Previous</button>
                 <button
                   onClick={() => setBookingPage(p => Math.min(totalBookingPages, p+1))}
                   disabled={bookingPage === totalBookingPages}
                   className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50"
-                >
-                  Next
-                </button>
+                >Next</button>
               </div>
             </div>
           </motion.div>
@@ -848,13 +782,6 @@ const AdminDashboard = () => {
                   <option value="4hours">4 Hours Booked</option>
                   <option value="fulltime">Full Time Booked</option>
                 </select>
-                <button
-                  onClick={() => setShowSeatAssignment(true)}
-                  className="btn-primary flex items-center space-x-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Assign Seat</span>
-                </button>
               </div>
             </div>
 
@@ -1062,18 +989,24 @@ const AdminDashboard = () => {
                 Add Expense
               </h2>
               <form
-                onSubmit={e => {
-                  e.preventDefault()
+                onSubmit={async e => {
+                  e.preventDefault();
                   if (!expenseForm.amount || !expenseForm.description) {
-                    toast.error('Please fill all fields')
-                    return
+                    toast.error('Please fill all fields');
+                    return;
                   }
-                  setExpenses(prev => [
-                    { ...expenseForm, amount: parseFloat(expenseForm.amount), date: new Date().toLocaleString() },
-                    ...prev
-                  ])
-                  setExpenseForm({ amount: '', description: '', admin: adminNames[0] })
-                  toast.success('Expense added!')
+                  try {
+                    const res = await api.post('/admin/expenses', {
+                      amount: expenseForm.amount,
+                      description: expenseForm.description,
+                      admin_name: expenseForm.admin
+                    });
+                    setExpenses(prev => [res.data.expense, ...prev]);
+                    setExpenseForm({ amount: '', description: '', admin: adminNames[0] });
+                    toast.success('Expense added!');
+                  } catch (error) {
+                    toast.error(error.response?.data?.error || 'Failed to add expense');
+                  }
                 }}
                 className="space-y-4"
               >
@@ -1139,10 +1072,10 @@ const AdminDashboard = () => {
                   <tbody className="bg-white divide-y divide-gray-100">
                     {expenses.map((exp, idx) => (
                       <tr key={idx}>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{exp.date}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{exp.created_at ? new Date(exp.created_at).toLocaleString() : ''}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-green-700 font-bold">₹{exp.amount}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{exp.description}</td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{exp.admin}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{exp.admin_name}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1332,7 +1265,8 @@ const AdminDashboard = () => {
                 >
                   <option value="pending">Pending</option>
                   <option value="paid">Paid</option>
-                  <option value="failed">Failed</option>
+                  {/* <option value="Paid Cash">Paid Cash</option> */}
+                  {/* <option value="completed">Completed</option> */}
                 </select>
               </div>
               <div>
@@ -1492,227 +1426,96 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Seat Assignment Modal */}
-      {showSeatAssignment && (
+      {/* Assign Seat Modal improvement */}
+      {assignSeatBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Assign Seat to Student</h3>
+          <div className="bg-white rounded-lg p-4 w-full max-w-sm mx-2 shadow-lg border">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-base font-semibold text-gray-900">Assign Seat</h3>
               <button 
-                onClick={() => setShowSeatAssignment(false)}
+                onClick={() => setAssignSeatBooking(null)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <XCircle className="w-6 h-6" />
+                <XCircle className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleSeatAssignment} className="space-y-4">
-              {/* Step 1: Student Selection */}
-              {assignmentStep === 1 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Student *</label>
-                  <select
-                    required
-                    value={seatAssignmentForm.studentId}
-                    onChange={(e) => setSeatAssignmentForm(prev => ({ ...prev, studentId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="">Select Student</option>
-                    {students.map(student => (
-                      <option key={student.id} value={student.id}>{student.name} ({student.email})</option>
-                    ))}
-                  </select>
-                  <div className="flex space-x-3 pt-4">
-                    <button 
-                      type="button" 
-                      onClick={() => setAssignmentStep(2)}
-                      disabled={!seatAssignmentForm.studentId}
-                      className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next: Select Date
-                    </button>
-                    <button type="button" onClick={() => setShowSeatAssignment(false)} className="btn-secondary flex-1">Cancel</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Date Selection */}
-              {assignmentStep === 2 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
-                  <input
-                    type="date"
-                    required
-                    value={seatAssignmentForm.startDate}
-                    onChange={(e) => setSeatAssignmentForm(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                  <div className="flex space-x-3 pt-4">
-                    <button type="button" onClick={() => setAssignmentStep(1)} className="btn-secondary flex-1">Back</button>
-                    <button 
-                      type="button" 
-                      onClick={() => setAssignmentStep(3)}
-                      disabled={!seatAssignmentForm.startDate}
-                      className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next: Select Type
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Assignment Type */}
-              {assignmentStep === 3 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assignment Type *</label>
-                  <select
-                    required
-                    value={seatAssignmentForm.assignmentType}
-                    onChange={(e) => setSeatAssignmentForm(prev => ({ ...prev, assignmentType: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="">Select Assignment Type</option>
-                    <option value="4hours">Morning/Evening (4 Hours)</option>
-                    <option value="fulltime">Full Time</option>
-                  </select>
-                  <div className="flex space-x-3 pt-4">
-                    <button type="button" onClick={() => setAssignmentStep(2)} className="btn-secondary flex-1">Back</button>
-                    <button 
-                      type="button" 
-                      onClick={() => setAssignmentStep(4)}
-                      disabled={!seatAssignmentForm.assignmentType}
-                      className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next: Select Seat
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Subscription Duration */}
-              {assignmentStep === 4 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subscription Period *</label>
-                  <select
-                    required
-                    value={seatAssignmentForm.subscriptionPeriod}
-                    onChange={(e) => setSeatAssignmentForm(prev => ({ ...prev, subscriptionPeriod: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="">Select Subscription Period</option>
-                    <option value="0.5">15 Days</option>
-                    <option value="1">1 Month</option>
-                  </select>
-                  <div className="flex space-x-3 pt-4">
-                    <button type="button" onClick={() => setAssignmentStep(3)} className="btn-secondary flex-1">Back</button>
-                    <button 
-                      type="button" 
-                      onClick={() => setAssignmentStep(5)}
-                      disabled={!seatAssignmentForm.subscriptionPeriod}
-                      className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next: Select Seat
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 5: Seat Selection */}
-              {assignmentStep === 5 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Seat *</label>
-                  <select
-                    required
-                    value={seatAssignmentForm.seatId}
-                    onChange={(e) => setSeatAssignmentForm(prev => ({ ...prev, seatId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="">Select Seat</option>
-                    {(() => {
-                      const selectedDate = seatAssignmentForm.startDate;
-                      const type = seatAssignmentForm.assignmentType;
-                      const period = seatAssignmentForm.subscriptionPeriod;
-                      if (!selectedDate || !type || !period) {
-                        return null;
+            {/* Booking Info */}
+            <div className="mb-3 text-xs text-gray-700 bg-gray-50 rounded p-2">
+              <div><span className="font-semibold">Student:</span> {assignSeatBooking.user_name}</div>
+              <div><span className="font-semibold">Date:</span> {assignSeatBooking.start_date}</div>
+              <div><span className="font-semibold">Duration:</span> {assignSeatBooking.duration_type === 'fulltime' ? 'Full Time' : '4 Hours'} ({assignSeatBooking.subscription_period} month)</div>
+            </div>
+            <form
+              onSubmit={async e => {
+                e.preventDefault();
+                if (!assignSeatId) {
+                  toast.error('Please select a seat');
+                  return;
+                }
+                try {
+                  await api.put(`/admin/bookings/${assignSeatBooking.id}`, { seatId: assignSeatId });
+                  toast.success('Seat assigned successfully!');
+                  setAssignSeatBooking(null);
+                  setAssignSeatId("");
+                  fetchAllData();
+                } catch (error) {
+                  toast.error(error.response?.data?.error || 'Failed to assign seat');
+                }
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Seat *</label>
+                <select
+                  required
+                  value={assignSeatId}
+                  onChange={e => setAssignSeatId(e.target.value)}
+                  className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                >
+                  <option value="">Select Seat</option>
+                  {seats.filter(seat => {
+                    // Only show available seats for the booking's period/type
+                    const durationType = assignSeatBooking.duration_type;
+                    const start = new Date(assignSeatBooking.start_date);
+                    const period = assignSeatBooking.subscription_period;
+                    const end = new Date(start);
+                    if (period === '0.5') {
+                      end.setDate(start.getDate() + 14);
+                    } else if (period === '1') {
+                      end.setMonth(start.getMonth() + 1);
+                      end.setDate(end.getDate() - 1);
+                    }
+                    // Check for overlap with same type bookings only
+                    const bookingsForSeatAndType = bookings.filter(b => 
+                      b.seat_id === seat.id && 
+                      b.duration_type === durationType && 
+                      b.status === 'active'
+                    );
+                    for (const b of bookingsForSeatAndType) {
+                      const bStart = new Date(b.start_date);
+                      let bEnd = new Date(bStart);
+                      if (b.subscription_period === '0.5') {
+                        bEnd.setDate(bStart.getDate() + 14);
+                      } else if (b.subscription_period === '1') {
+                        bEnd.setMonth(bStart.getMonth() + 1);
+                        bEnd.setDate(bEnd.getDate() - 1);
                       }
-                      // Calculate requested period
-                      const start = new Date(selectedDate);
-                      const end = new Date(start);
-                      if (period === '0.5') {
-                        end.setDate(start.getDate() + 14); // 15 days total (inclusive)
-                      } else if (period === '1') {
-                        end.setMonth(start.getMonth() + 1);
-                        end.setDate(end.getDate() - 1); // 1 month (inclusive)
+                      if (!(end < bStart || start > bEnd)) {
+                        return false;
                       }
-                      // For each seat, check if any booking of the SAME TYPE overlaps with requested period
-                      const availableSeats = seats.filter(seat => {
-                        // For 4 hours: check only 4 hours bookings (ignore full time)
-                        // For full time: check only full time bookings (ignore 4 hours)
-                        const bookingsForSeatAndType = bookings.filter(b => 
-                          b.seat_id === seat.id && 
-                          b.duration_type === type && 
-                          b.status === 'active'
-                        );
-                        
-                        // Check for overlap with same type bookings only
-                        for (const b of bookingsForSeatAndType) {
-                          const bStart = new Date(b.start_date);
-                          let bEnd = new Date(bStart);
-                          if (b.subscription_period === '0.5') {
-                            bEnd.setDate(bStart.getDate() + 14);
-                          } else if (b.subscription_period === '1') {
-                            bEnd.setMonth(bStart.getMonth() + 1);
-                            bEnd.setDate(bEnd.getDate() - 1);
-                          }
-                          // If periods overlap, seat is not available for this type
-                          if (!(end < bStart || start > bEnd)) {
-                            return false;
-                          }
-                        }
-                        return true;
-                      });
-                      if (availableSeats.length === 0) {
-                        return <option value="" disabled>No seats available for {type === 'fulltime' ? 'Full Time' : '4 Hours'} for the selected period</option>;
-                      } else {
-                        return availableSeats.map(seat => (
-                          <option key={seat.id} value={seat.id}>
-                            Seat {seat.seat_number} (Column {seat.column_number})
-                          </option>
-                        ));
-                      }
-                    })()}
-                  </select>
-                  <div className="flex space-x-3 pt-4">
-                    <button type="button" onClick={() => setAssignmentStep(4)} className="btn-secondary flex-1">Back</button>
-                    <button 
-                      type="button" 
-                      onClick={() => setAssignmentStep(6)}
-                      disabled={!seatAssignmentForm.seatId}
-                      className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next: Amount
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 6: Amount */}
-              {assignmentStep === 6 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount *</label>
-                  <input
-                    type="number"
-                    required
-                    value={seatAssignmentForm.totalAmount}
-                    onChange={(e) => setSeatAssignmentForm(prev => ({ ...prev, totalAmount: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Enter amount"
-                  />
-                  <div className="flex space-x-3 pt-4">
-                    <button type="button" onClick={() => setAssignmentStep(5)} className="btn-secondary flex-1">Back</button>
-                    <button type="submit" className="btn-primary flex-1">Assign Seat</button>
-                  </div>
-                </div>
-              )}
+                    }
+                    return true;
+                  }).map(seat => (
+                    <option key={seat.id} value={seat.id}>
+                      Seat {seat.seat_number} (Column {seat.column_number})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex space-x-2 pt-2">
+                <button type="submit" className="btn-primary flex-1 py-2 text-sm">Assign Seat</button>
+                <button type="button" onClick={() => setAssignSeatBooking(null)} className="btn-secondary flex-1 py-2 text-sm">Cancel</button>
+              </div>
             </form>
           </div>
         </div>

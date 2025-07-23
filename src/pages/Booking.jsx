@@ -62,7 +62,7 @@ const Booking = () => {
 
   // Duration options
   const durationOptions = [
-    { value: '4', label: '4 Hours (Morning/Evening)', price: 300, icon: <Clock className="w-5 h-5" />, color: 'from-blue-500 to-blue-600', seatAllocation: 'owner' },
+    { value: '4', label: '4 Hours (Morning/Evening)', price: 400, icon: <Clock className="w-5 h-5" />, color: 'from-blue-500 to-blue-600', seatAllocation: 'owner' },
     { value: 'full', label: 'Full Time', price: 600, icon: <Timer className="w-5 h-5" />, color: 'from-purple-500 to-purple-600', seatAllocation: 'user' }
   ]
 
@@ -113,10 +113,10 @@ const Booking = () => {
           // Transform as before
           const transformedBookings = data.data.map(booking => ({
             seatId: booking.seat_number,
-            start_date: booking.start_date,
+            start_date: booking.start_date.split('T')[0], // Use only date part
             subscription_period: booking.subscription_period,
             time: booking.start_time,
-            expiry_date: booking.expiry_date,
+            expiry_date: booking.expiry_date.split('T')[0], // Use only date part
             duration_type: booking.duration_type
           }));
           setBookedSeats(transformedBookings);
@@ -152,37 +152,43 @@ const Booking = () => {
     return nextThreeDates.some(nd => nd.getTime() === d.getTime());
   };
 
-  // Disable seat for all three days if its fulltime booking starts on aaj, kal, or parso
-  const isFullTimeSeatBooked = (seatId) => {
-    // Get all start_dates for fulltime bookings for this seat
-    const startDates = bookedSeats
-      .filter(booking => booking.seatId === seatId && booking.duration_type === 'fulltime')
-      .map(booking => booking.start_date);
+  // Helper: For a given seat, check if it is booked for any of the next three days (for full-time bookings)
+  const nextThreeDatesForFullTime = [0, 1, 2].map(i => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    d.setHours(0,0,0,0);
+    return d;
+  });
 
-    // Get all next three dates as yyyy-MM-dd
-    const nextThree = [0, 1, 2].map(i => {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      return format(d, 'yyyy-MM-dd');
+  const isFullTimeSeatBookedNextThreeDays = (seatId) => {
+    return nextThreeDatesForFullTime.some(dateToCheck => {
+      return bookedSeats.some(booking => {
+        if (booking.seatId !== seatId || booking.duration_type !== 'fulltime') return false;
+        const start = new Date(booking.start_date);
+        start.setHours(0,0,0,0);
+        const expiry = new Date(booking.expiry_date);
+        expiry.setHours(0,0,0,0);
+        return dateToCheck >= start && dateToCheck <= expiry;
+      });
     });
-
-    // If any start_date matches aaj, kal, parso, disable seat for all three days
-    return startDates.some(date => nextThree.includes(date));
   };
 
-  // Helper: For a given seat, check if it is booked for the selected date (from start to expiry)
+  // In seat selection logic, update isSeatBooked to only consider bookings as booked if today is within the booking period
   const isSeatBooked = (seatId) => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
     return bookedSeats.some(booking => {
       if (booking.seatId !== seatId) return false;
       const start = new Date(booking.start_date);
       start.setHours(0,0,0,0);
       const expiry = new Date(booking.expiry_date);
       expiry.setHours(0,0,0,0);
-      const selected = new Date(selectedDate);
-      selected.setHours(0,0,0,0);
-      return selected >= start && selected <= expiry;
+      return today >= start && today <= expiry;
     });
   };
+
+  // For admin, allow seat selection for 4-hour bookings as well
+  // Show seat selection UI for both duration types
 
   // Calendar UI: allow selection of any date (except past), but visually highlight today, tomorrow, and day after tomorrow
   const today = new Date();
@@ -409,10 +415,14 @@ const Booking = () => {
   }
 
   const calculateTotal = () => {
-    const selectedPeriod = subscriptionPeriods.find(p => p.value === bookingData.subscriptionPeriod)
     const selectedDuration = durationOptions.find(d => d.value === bookingData.duration)
-    const pricePerSeat = selectedDuration ? selectedDuration.price : 600
-    return selectedSeats.length * pricePerSeat
+    const pricePerSeat = selectedDuration ? selectedDuration.price : 600;
+    // For 4 hours booking, always charge for 1 seat (owner allocates seat, user doesn't select)
+    if (bookingData.duration === '4') {
+      return pricePerSeat;
+    }
+    // For full time, charge per selected seat
+    return selectedSeats.length * pricePerSeat;
   }
 
   const getSeatPosition = (seatId) => {
@@ -665,21 +675,21 @@ const Booking = () => {
                             <motion.button
                               key={seatId}
                               onClick={() => handleSeatClick(seatId)}
-                              disabled={isFullTimeSeatBooked(seatId)}
+                              disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
                               onHoverStart={() => setHoveredSeat(seatId)}
                               onHoverEnd={() => setHoveredSeat(null)}
-                              whileHover={!isFullTimeSeatBooked(seatId) ? { scale: 1.02, y: -2 } : {}}
-                              whileTap={!isFullTimeSeatBooked(seatId) ? { scale: 0.98 } : {}}
+                              whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.02, y: -2 } : {}}
+                              whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.98 } : {}}
                               className={`seat w-full h-14 relative rounded-lg transition-all duration-200 ${
                                 selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg' : ''
                               } ${
-                                isFullTimeSeatBooked(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
+                                isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
                               }`}
                             >
                               <div className="flex items-center justify-between px-4">
                                 <div className="flex items-center space-x-2">
                                   <span className="font-medium">Seat {seatId}</span>
-                                  {isFullTimeSeatBooked(seatId) && (
+                                  {isFullTimeSeatBookedNextThreeDays(seatId) && (
                                     <div className="flex items-center space-x-1">
                                       <X className="w-4 h-4 text-red-500" />
                                       <span className="text-xs text-red-600 font-medium">BOOKED</span>
@@ -711,7 +721,7 @@ const Booking = () => {
                                   animate={{ opacity: 1, y: 0 }}
                                   className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10"
                                 >
-                                  {isFullTimeSeatBooked(seatId) ? 'Already Booked' : 'Click to Select'}
+                                  {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
                                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                                 </motion.div>
                               )}
@@ -734,21 +744,21 @@ const Booking = () => {
                             <motion.button
                               key={seatId}
                               onClick={() => handleSeatClick(seatId)}
-                              disabled={isFullTimeSeatBooked(seatId)}
+                              disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
                               onHoverStart={() => setHoveredSeat(seatId)}
                               onHoverEnd={() => setHoveredSeat(null)}
-                              whileHover={!isFullTimeSeatBooked(seatId) ? { scale: 1.02, y: -2 } : {}}
-                              whileTap={!isFullTimeSeatBooked(seatId) ? { scale: 0.98 } : {}}
+                              whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.02, y: -2 } : {}}
+                              whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.98 } : {}}
                               className={`seat w-full h-14 relative rounded-lg transition-all duration-200 ${
                                 selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg' : ''
                               } ${
-                                isFullTimeSeatBooked(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
+                                isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
                               }`}
                             >
                               <div className="flex items-center justify-between px-4">
                                 <div className="flex items-center space-x-2">
                                   <span className="font-medium">Seat {seatId}</span>
-                                  {isFullTimeSeatBooked(seatId) && (
+                                  {isFullTimeSeatBookedNextThreeDays(seatId) && (
                                     <div className="flex items-center space-x-1">
                                       <X className="w-4 h-4 text-red-500" />
                                       <span className="text-xs text-red-600 font-medium">BOOKED</span>
@@ -780,7 +790,7 @@ const Booking = () => {
                                   animate={{ opacity: 1, y: 0 }}
                                   className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10"
                                 >
-                                  {isFullTimeSeatBooked(seatId) ? 'Already Booked' : 'Click to Select'}
+                                  {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
                                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                                 </motion.div>
                               )}
@@ -1148,7 +1158,7 @@ const Booking = () => {
                   Booking Policy
                 </h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• 4 Hours (Morning/Evening): ₹300 per seat</li>
+                  <li>• 4 Hours (Morning/Evening): ₹400 per seat</li>
                   <li>• Full Time: ₹600 per seat</li>
                   <li>• Payment required at booking</li>
                   <li>• We only allow booking for today, tomorrow, or the day after tomorrow to prevent advance blocking and ensure fair seat availability for all students.</li>
