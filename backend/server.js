@@ -13,12 +13,25 @@ const { router: adminRoutes } = require('./routes/admin');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Enable CORS for both localhost and 127.0.0.1 for port 3000
+// Enable CORS for deployed frontend and localhost
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://studypointlibrary.vercel.app',
+  'https://study-room-booking-c3xt2gf2p-satyam-patidar-0602s-projects.vercel.app'
+];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000'
-  ],
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
