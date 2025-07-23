@@ -27,6 +27,7 @@ import {
   Instagram
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { getBaseUrl } from '../config/urls';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -142,7 +143,7 @@ const Contact = () => {
 
     try {
       // Send to backend
-      const res = await fetch('/api/contact', {
+      const res = await fetch(`${getBaseUrl()}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

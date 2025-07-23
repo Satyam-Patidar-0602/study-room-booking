@@ -32,6 +32,7 @@ import {
 import toast from 'react-hot-toast'
 import { bookingAPI, apiUtils } from '../services/api'
 import { load as loadCashfree } from '@cashfreepayments/cashfree-js';
+import { getBaseUrl } from '../config/urls';
 
 // Remove loadCashfreeScript and window.Cashfree usage
 
@@ -107,7 +108,7 @@ const Booking = () => {
   useEffect(() => {
     const fetchBookedSeats = async () => {
       try {
-        const response = await fetch('/api/bookings/booked-seats-next-three');
+        const response = await fetch(`${getBaseUrl()}/api/bookings/booked-seats-next-three`);
         const data = await response.json();
         if (data.success) {
           // Transform as before
@@ -277,7 +278,7 @@ const Booking = () => {
       subscriptionPeriod: bookingData.subscriptionPeriod,
       selectedSeats: bookingData.duration === 'full' ? selectedSeats : []
     };
-            const response = await fetch('/api/cashfree/create-order', {
+            const response = await fetch(`${getBaseUrl()}/api/cashfree/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderPayload)
