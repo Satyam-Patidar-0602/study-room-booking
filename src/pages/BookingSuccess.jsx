@@ -91,7 +91,7 @@ const BookingSuccess = () => {
       
       // Upload to backend
       try {
-        const response = await axios.post('/api/upload-pdf', formData, {
+        const response = await axios.post(`${getBaseUrl()}/api/upload-pdf`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         
