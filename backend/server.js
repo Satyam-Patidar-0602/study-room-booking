@@ -11,6 +11,7 @@ const contactRoute = require('./routes/contact');
 const { router: adminRoutes } = require('./routes/admin');
 
 const app = express();
+app.set('trust proxy', 1); // Trust Render's proxy for correct rate limiting and IP detection
 const PORT = process.env.PORT || 3001;
 
 // Enable CORS for deployed frontend and localhost

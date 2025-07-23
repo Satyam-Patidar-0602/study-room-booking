@@ -44,9 +44,9 @@ router.post('/upload-pdf', upload.single('pdf'), async (req, res) => {
     }
     
     // Create a URL for the file (works in both dev and production)
-    // Use FRONTEND_URL or BASE_URL in production, fallback to localhost
+    // Use BACKEND_URL or BASE_URL in production, fallback to localhost
     const baseUrl = process.env.NODE_ENV === 'production'
-      ? process.env.FRONTEND_URL || process.env.BASE_URL || 'https://yourdomain.com'
+      ? process.env.BACKEND_URL || process.env.BASE_URL || 'https://study-room-booking-wc6r.onrender.com'
       : 'http://localhost:3001';
     const localUrl = `${baseUrl}/uploads/${path.basename(req.file.path)}`;
     
