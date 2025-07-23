@@ -42,7 +42,8 @@ router.post('/create-order', async (req, res) => {
         customer_name: customerName
       },
       order_meta: {
-        return_url: 'https://yourdomain.com/booking-success?order_id={order_id}'
+        // Use FRONTEND_URL env variable for return_url, fallback to localhost
+        return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/booking-success?order_id={order_id}`
       }
     };
     const cfRes = await cashfree.PGCreateOrder(request);

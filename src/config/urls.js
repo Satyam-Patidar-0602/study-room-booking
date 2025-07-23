@@ -1,13 +1,7 @@
 // URL Configuration for different environments
 const getBaseUrl = () => {
-  // Check if we're in development
-  if (import.meta.env.DEV) {
-    return 'http://localhost:3001';
-  }
-  
-  // For production, use your actual domain
-  // Update this when you deploy
-  return 'https://yourdomain.com'; // Replace with your actual domain
+  // Use VITE_API_URL if set (for production), otherwise default to localhost
+  return import.meta.env.VITE_API_URL || 'http://localhost:3001';
 };
 
 const getUploadUrl = (filename) => {
