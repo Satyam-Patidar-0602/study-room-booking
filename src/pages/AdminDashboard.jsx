@@ -442,14 +442,14 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
         <div className="mb-8">
-          <nav className="flex space-x-8">
+          <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 -mx-2 px-2">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`flex items-center space-x-1 sm:space-x-2 py-2 px-1 border-b-2 font-medium text-xs sm:text-sm ${
                     activeTab === tab.id
                       ? 'border-primary-500 text-primary-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -672,8 +672,8 @@ const AdminDashboard = () => {
               </button>
             </div>
 
-            {/* Bookings Table */}
-            <div className="bg-white rounded-lg shadow overflow-x-auto relative">
+            {/* Bookings Table (hidden on mobile) */}
+            <div className="bg-white rounded-lg shadow overflow-x-auto relative hidden md:block">
               {/* Horizontal scroll shadow */}
               <div className="pointer-events-none absolute top-0 right-0 h-full w-6 bg-gradient-to-l from-white to-transparent z-10" />
               <table className="min-w-full divide-y divide-gray-200">
@@ -749,20 +749,38 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
-            {/* Pagination Controls */}
-            <div className="flex justify-between items-center mt-4 flex-wrap gap-2">
-              <span className="text-sm text-gray-600">Page {bookingPage} of {totalBookingPages}</span>
-              <div className="space-x-2">
-                <button
-                  onClick={() => setBookingPage(p => Math.max(1, p-1))}
-                  disabled={bookingPage === 1}
-                  className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50"
-                >Previous</button>
-                <button
-                  onClick={() => setBookingPage(p => Math.min(totalBookingPages, p+1))}
-                  disabled={bookingPage === totalBookingPages}
-                  className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50"
-                >Next</button>
+            {/* Bookings Card List (mobile only) */}
+            <div className="block md:hidden space-y-4">
+              {paginatedBookings.filter(Boolean).map((booking) => (
+                <div key={booking.id} className="bg-white rounded-lg shadow p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <div className="font-semibold text-gray-900">{booking.user_name}</div>
+                      <div className="text-xs text-gray-500">{booking.user_email}</div>
+                    </div>
+                    <span className={`px-2 py-1 text-xs rounded-full ${booking.payment_status === 'completed' || booking.payment_status === 'paid' ? 'bg-green-100 text-green-800' : booking.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{booking.payment_status}</span>
+                  </div>
+                  <div className="text-sm text-gray-700 mb-1">Mobile: {booking.user_phone || '-'}</div>
+                  <div className="text-sm text-gray-700 mb-1">Seat: {booking.seat_number ? `Seat ${booking.seat_number}` : <span className='text-red-500'>Unassigned</span>}</div>
+                  <div className="text-sm text-gray-700 mb-1">Type: {booking.duration_type === 'fulltime' ? 'Full Time' : '4 Hours (Morning/Evening)'}</div>
+                  <div className="text-sm text-gray-700 mb-1">Start: {booking.start_date}</div>
+                  <div className="text-sm text-gray-700 mb-1">Expiry: {booking.end_date ? booking.end_date : getExpiryDate(booking.start_date, booking.subscription_period).toISOString().split('T')[0]}</div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <button onClick={() => setEditingItem({ type: 'bookings', data: booking })} className="text-indigo-600 hover:text-indigo-900 text-xs flex items-center"><Edit className="w-4 h-4 mr-1" />Edit</button>
+                    <button onClick={() => handleDelete('bookings', booking.id)} className="text-red-600 hover:text-red-900 text-xs flex items-center"><Trash2 className="w-4 h-4 mr-1" />Delete</button>
+                    {booking.status === 'active' && booking.duration_type === '4hours' && booking.payment_status === 'paid' && (!booking.seat_id || booking.seat_id === null) && (
+                      <button onClick={() => { setAssignSeatBooking(booking); setAssignSeatId(""); }} className="text-green-600 hover:text-green-900 text-xs flex items-center border border-green-200 rounded px-2 py-1 bg-green-50 font-semibold">Assign Seat</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {/* Pagination Controls (mobile) */}
+              <div className="flex justify-between items-center mt-4 flex-wrap gap-2">
+                <span className="text-sm text-gray-600">Page {bookingPage} of {totalBookingPages}</span>
+                <div className="space-x-2">
+                  <button onClick={() => setBookingPage(p => Math.max(1, p-1))} disabled={bookingPage === 1} className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50">Previous</button>
+                  <button onClick={() => setBookingPage(p => Math.min(totalBookingPages, p+1))} disabled={bookingPage === totalBookingPages} className="px-3 py-1 rounded border bg-gray-100 disabled:opacity-50">Next</button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -868,8 +886,8 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Seats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Seats Grid (hidden on mobile) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 hidden sm:grid">
               {seats.map(seat => {
                   // Check for 4 hours booking (any active booking)
                   const booking4h = bookings.find(b => 
@@ -978,6 +996,60 @@ const AdminDashboard = () => {
                       </div>
                   )
                 })}
+            </div>
+            {/* Seats Card List (mobile only) */}
+            <div className="block sm:hidden space-y-4">
+              {seats.map(seat => {
+                const booking4h = bookings.find(b => b && b.seat_id === seat.id && b.status === 'active' && b.duration_type === '4hours');
+                const bookingFt = bookings.find(b => b && b.seat_id === seat.id && b.status === 'active' && b.duration_type === 'fulltime');
+                let statusText = 'Available';
+                let statusColor = 'bg-green-100 text-green-800';
+                if (booking4h && bookingFt) {
+                  statusText = 'Both Booked';
+                  statusColor = 'bg-purple-100 text-purple-800';
+                } else if (booking4h) {
+                  statusText = '4H Booked';
+                  statusColor = 'bg-orange-100 text-orange-800';
+                } else if (bookingFt) {
+                  statusText = 'FT Booked';
+                  statusColor = 'bg-blue-100 text-blue-800';
+                }
+                return (
+                  <div key={seat.id} className="bg-white rounded-lg shadow p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-lg font-medium text-gray-900">Seat {seat.seat_number}</h3>
+                      <span className={`px-2 py-1 text-xs rounded-full ${statusColor}`}>{statusText}</span>
+                    </div>
+                    <div className="text-sm text-gray-600 mb-1">Column: {seat.column_number}</div>
+                    {booking4h && (
+                      <div className="mt-2 p-2 bg-orange-50 rounded border-l-4 border-orange-500">
+                        <div className="text-xs font-medium text-orange-700 mb-1">4 Hours Booking:</div>
+                        <div className="text-xs text-gray-600">Student: {booking4h.user_name || 'Unknown'}</div>
+                        <div className="text-xs text-gray-600">Date: {booking4h.start_date}</div>
+                        <div className="text-xs text-gray-600">Time: {booking4h.start_time || '09:00'}</div>
+                        <div className="text-xs text-gray-600">Period: {booking4h.subscription_period} month(s)</div>
+                        <div className="text-xs text-gray-600">Payment: <span className={`ml-1 px-1 py-0.5 rounded text-xs ${booking4h.payment_status === 'paid' ? 'bg-green-100 text-green-800' : booking4h.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{booking4h.payment_status}</span></div>
+                      </div>
+                    )}
+                    {bookingFt && (
+                      <div className="mt-2 p-2 bg-blue-50 rounded border-l-4 border-blue-500">
+                        <div className="text-xs font-medium text-blue-700 mb-1">Full Time Booking:</div>
+                        <div className="text-xs text-gray-600">Student: {bookingFt.user_name || 'Unknown'}</div>
+                        <div className="text-xs text-gray-600">Date: {bookingFt.start_date}</div>
+                        <div className="text-xs text-gray-600">Time: {bookingFt.start_time || '09:00'}</div>
+                        <div className="text-xs text-gray-600">Period: {bookingFt.subscription_period} month(s)</div>
+                        <div className="text-xs text-gray-600">Payment: <span className={`ml-1 px-1 py-0.5 rounded text-xs ${bookingFt.payment_status === 'paid' ? 'bg-green-100 text-green-800' : bookingFt.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{bookingFt.payment_status}</span></div>
+                      </div>
+                    )}
+                    {!booking4h && !bookingFt && (
+                      <div className="mt-2 p-2 bg-green-50 rounded border-l-4 border-green-500">
+                        <div className="text-xs font-medium text-green-700">Available for both types</div>
+                        <div className="text-xs text-green-600">No bookings for today</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}
