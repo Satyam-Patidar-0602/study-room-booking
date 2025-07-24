@@ -1,10 +1,11 @@
+import { getBaseUrl } from '../config/urls';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import axios from 'axios';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import BookingIdCard from '../components/BookingIdCard'; // You may need to extract the card from BookingSuccess.jsx
-import { getBaseUrl } from '../config/urls';
+
 
 /**
  * bookingDetails: {

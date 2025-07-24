@@ -15,7 +15,7 @@ import {
   Shield
 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
-import { getUploadUrl, getFallbackUrl } from '../config/urls'
+import { getUploadUrl, getFallbackUrl, getBaseUrl } from '../config/urls'
 import BookingIdCard from '../components/BookingIdCard'
 
 const BookingSuccess = () => {
