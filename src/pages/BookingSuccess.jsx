@@ -238,8 +238,7 @@ const BookingSuccess = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
-          className="mb-8 bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-blue-500 relative max-w-xl mx-auto"
-          style={{ width: 480 }}
+          className="mx-auto mb-8 w-full max-w-[350px] sm:max-w-[400px] md:max-w-[480px] overflow-hidden rounded-xl shadow-lg bg-white"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-purple-400/10 to-pink-400/20 pointer-events-none"></div>
           <div className="absolute inset-0 opacity-5">
@@ -343,28 +342,11 @@ const BookingSuccess = () => {
             </div>
           </div>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
-        >
-          <button
-            onClick={handleDownloadIDCard}
-            className="btn-primary flex items-center justify-center"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download ID Card (PDF)
-          </button>
-          <Link to="/booking" className="btn-secondary flex items-center justify-center">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Book Another Seat
-          </Link>
-          <Link to="/" className="btn-secondary flex items-center justify-center">
-            <Home className="w-4 h-4 mr-2" />
-            Back to Home
-          </Link>
-        </motion.div>
+        {/* Action buttons: ensure type='button' and use Link for navigation */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/" className="btn-secondary text-center" type="button">Go to Home</Link>
+          <Link to="/booking" className="btn-primary text-center" type="button">Book Another Seat</Link>
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
