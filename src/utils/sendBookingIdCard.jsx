@@ -22,16 +22,12 @@ export async function sendBookingIdCardPDF({ bookingDetails, email, onComplete }
   container.style.top = '0';
   document.body.appendChild(container);
 
-  // --- Ensure seat number is always included ---
-  let seatInfo = bookingDetails.seats;
-  if (!seatInfo && bookingDetails.seatId && Array.isArray(window.seats)) {
-    // Try to find the seat in the global seats array if available
-    const seat = window.seats.find(s => String(s.id) === String(bookingDetails.seatId));
-    seatInfo = seat ? `Seat ${seat.seat_number}` : 'N/A';
-    console.log('Admin PDF seat lookup:', bookingDetails.seatId, seat, window.seats);
-  } else if (!seatInfo) {
-    seatInfo = 'N/A';
-    console.warn('No seat info found for bookingDetails:', bookingDetails);
+  // Format seat(s) for display
+  let seatInfo = 'N/A';
+  if (Array.isArray(bookingDetails.seats) && bookingDetails.seats.length > 0) {
+    seatInfo = bookingDetails.seats.map(seatId => `Seat ${seatId}`).join(', ');
+  } else if (typeof bookingDetails.seats === 'number' || typeof bookingDetails.seats === 'string') {
+    seatInfo = `Seat ${bookingDetails.seats}`;
   }
 
   // 2. Render the card with fallback QR (will update after upload)

@@ -8,7 +8,12 @@ const BookingIdCard = ({ bookingDetails }) => {
   const name = bookingDetails.name ? String(bookingDetails.name) : 'N/A';
   const email = bookingDetails.email ? String(bookingDetails.email) : 'N/A';
   const phone = bookingDetails.phone ? String(bookingDetails.phone) : 'N/A';
-  const seats = Array.isArray(bookingDetails.seats) ? bookingDetails.seats.join(', ') : (bookingDetails.seats || 'N/A');
+  let seats = 'N/A';
+  if (Array.isArray(bookingDetails.seats) && bookingDetails.seats.length > 0) {
+    seats = bookingDetails.seats.map(seatId => `Seat ${seatId}`).join(', ');
+  } else if (typeof bookingDetails.seats === 'number' || typeof bookingDetails.seats === 'string') {
+    seats = `Seat ${bookingDetails.seats}`;
+  }
   const durationLabel =
     bookingDetails.duration === '4'
       ? '4 Hours(Morning/Evening)'
