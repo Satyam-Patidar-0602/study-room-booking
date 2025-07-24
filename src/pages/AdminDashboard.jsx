@@ -207,7 +207,7 @@ const AdminDashboard = () => {
           name: student.name,
           email: student.email,
           phone: student.phone,
-          seats: seat ? `Seat ${seat.seat_number}` : 'N/A',
+          seats: seat ? [seat.seat_number] : [],
           totalAmount: bookingForm.totalAmount,
           date: bookingForm.startDate,
           duration: bookingForm.duration,
