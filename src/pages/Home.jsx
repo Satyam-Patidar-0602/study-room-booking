@@ -182,8 +182,8 @@ export default function Home() {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-12 sm:py-20 md:py-24 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -193,13 +193,13 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium mb-6"
+                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6"
               >
                 <Zap className="w-4 h-4 mr-2" />
                 Extended Hours Available
               </motion.div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 sm:mb-6">
                 Welcome to
                 <motion.span 
                   className="block text-primary-200"
@@ -219,7 +219,7 @@ export default function Home() {
               </h1>
               
               <motion.p 
-                className="text-xl md:text-2xl text-primary-100 mb-8 leading-relaxed"
+                className="text-base sm:text-xl md:text-2xl text-primary-100 mb-6 sm:mb-8 leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
@@ -232,11 +232,11 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="flex flex-col sm:flex-row gap-4"
+                className="flex flex-col gap-3 sm:flex-row sm:gap-4"
               >
                 <Link
                   to="/booking"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base"
                 >
                   <BookOpen className="w-5 h-5 mr-2" />
                   Book Your Seat
@@ -244,7 +244,7 @@ export default function Home() {
                 </Link>
                 <Link
                   to="/contact"
-                  className="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-primary-600 transition-all duration-200 transform hover:scale-105"
+                  className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-primary-600 transition-all duration-200 transform hover:scale-105 text-sm sm:text-base"
                 >
                   <Phone className="w-5 h-5 mr-2" />
                   Contact Us
@@ -256,7 +256,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9 }}
-                className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12"
+                className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6 mt-8 sm:mt-12"
               >
                 {stats.map((stat, idx) => (
                   <motion.div
@@ -264,8 +264,8 @@ export default function Home() {
                     whileHover={{ scale: 1.05 }}
                     className="text-center"
                   >
-                    <div className="text-2xl md:text-3xl font-bold mb-1">{stat.number}</div>
-                    <div className="text-sm text-primary-200">{stat.label}</div>
+                    <div className="text-lg sm:text-2xl md:text-3xl font-bold mb-1">{stat.number}</div>
+                    <div className="text-xs sm:text-sm text-primary-200">{stat.label}</div>
                   </motion.div>
                 ))}
               </motion.div>
@@ -277,13 +277,13 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative"
             >
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 relative overflow-hidden">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-8 border border-white/20 relative overflow-hidden">
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={currentImage}
                     src={images[currentImage]}
                     alt="The Study Point Library Jiran"
-                    className="w-full h-64 object-cover rounded-xl mb-6"
+                    className="w-full h-40 sm:h-64 object-cover rounded-xl mb-4 sm:mb-6"
                     initial={{ opacity: 0, scale: 1.1 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -292,7 +292,7 @@ export default function Home() {
                 </AnimatePresence>
                 
                 {/* Image indicators */}
-                <div className="flex justify-center space-x-2 mb-4">
+                <div className="flex justify-center space-x-2 mb-2 sm:mb-4">
                   {images.map((_, idx) => (
                     <motion.button
                       key={idx}
@@ -306,8 +306,8 @@ export default function Home() {
                 </div>
 
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Perfect Study Environment</h3>
-                  <p className="text-primary-200 text-sm">Comfortable, quiet, and productive</p>
+                  <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Perfect Study Environment</h3>
+                  <p className="text-primary-200 text-xs sm:text-sm">Comfortable, quiet, and productive</p>
                 </div>
               </div>
             </motion.div>
@@ -316,24 +316,24 @@ export default function Home() {
       </section>
 
       {/* FEATURES SECTION */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8">
           <motion.div 
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
               Why Choose Our Study Space?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               We provide everything you need for a successful study session
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {features.map((feature, idx) => (
               <motion.div
                 key={idx}
@@ -346,19 +346,19 @@ export default function Home() {
                 onHoverEnd={() => setHoveredFeature(null)}
                 className="relative group"
               >
-                <div className={`p-6 rounded-2xl bg-gradient-to-br ${feature.color} text-white text-center transition-all duration-300 transform group-hover:scale-105 shadow-lg group-hover:shadow-xl`}>
+                <div className={`p-4 sm:p-6 rounded-2xl bg-gradient-to-br ${feature.color} text-white text-center transition-all duration-300 transform group-hover:scale-105 shadow-lg group-hover:shadow-xl`}>
                   <motion.div
                     animate={{ 
                       rotate: hoveredFeature === idx ? 360 : 0,
                       scale: hoveredFeature === idx ? 1.2 : 1
                     }}
                     transition={{ duration: 0.3 }}
-                    className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4"
+                    className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full mb-2 sm:mb-4"
                   >
                     {feature.icon}
                   </motion.div>
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-white/90">{feature.description}</p>
+                  <h3 className="text-base sm:text-xl font-semibold mb-1 sm:mb-2">{feature.title}</h3>
+                  <p className="text-white/90 text-xs sm:text-base">{feature.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -367,24 +367,24 @@ export default function Home() {
       </section>
 
       {/* GALLERY SECTION */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8">
           <motion.div 
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
               Our Study Environment
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Take a look at our comfortable and well-equipped study spaces designed for maximum productivity.
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             {images.map((image, idx) => (
               <motion.div
                 key={idx}
@@ -398,14 +398,14 @@ export default function Home() {
                 <img 
                   src={image} 
                   alt={`Study Area ${idx + 1}`} 
-                  className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110" 
+                  className="w-full h-40 sm:h-64 object-cover transition-transform duration-500 group-hover:scale-110" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h3 className="text-lg font-semibold mb-1">
+                  <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 text-white">
+                    <h3 className="text-base sm:text-lg font-semibold mb-0.5 sm:mb-1">
                       {idx === 0 ? 'Main Study Area' : idx === 1 ? 'Quiet Zone' : 'Refreshment Area'}
                     </h3>
-                    <p className="text-sm text-white/80">
+                    <p className="text-xs sm:text-sm text-white/80">
                       {idx === 0 ? 'Spacious and well-lit study environment' : 
                        idx === 1 ? 'Perfect for focused study sessions' : 
                        'Relax and recharge between sessions'}
@@ -419,19 +419,19 @@ export default function Home() {
       </section>
 
       {/* TESTIMONIALS SECTION */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8">
           <motion.div 
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
               What Our Students Say About Us
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Hear directly from our students and their real experiences at Study Point Library Jiran.
             </p>
           </motion.div>
@@ -446,12 +446,12 @@ export default function Home() {
                 transition={{ duration: 0.5 }}
                 className="max-w-4xl mx-auto text-center"
               >
-                <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-8 md:p-12">
-                  <div className="flex justify-center mb-6">
+                <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-4 sm:p-8 md:p-12">
+                  <div className="flex justify-center mb-4 sm:mb-6">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-6 h-6 ${
+                        className={`w-5 h-5 sm:w-6 sm:h-6 ${
                           i < testimonials[currentTestimonial].rating
                             ? 'text-yellow-400 fill-current'
                             : 'text-gray-300'
@@ -460,16 +460,16 @@ export default function Home() {
                     ))}
                   </div>
                   
-                  <blockquote className="text-xl md:text-2xl text-gray-700 mb-8 italic">
+                  <blockquote className="text-base sm:text-xl md:text-2xl text-gray-700 mb-4 sm:mb-8 italic">
                     "{testimonials[currentTestimonial].text}"
                   </blockquote>
                   
-                  <div className="flex items-center justify-center space-x-4">
+                  <div className="flex items-center justify-center space-x-2 sm:space-x-4">
                     <div className="text-left">
-                      <div className="font-semibold text-gray-900">
+                      <div className="font-semibold text-gray-900 text-sm sm:text-base">
                         {testimonials[currentTestimonial].name}
                       </div>
-                      <div className="text-gray-600">
+                      <div className="text-gray-600 text-xs sm:text-sm">
                         {testimonials[currentTestimonial].role}
                       </div>
                     </div>
@@ -479,7 +479,7 @@ export default function Home() {
             </AnimatePresence>
 
             {/* Testimonial controls */}
-            <div className="flex justify-center items-center space-x-4 mt-8">
+            <div className="flex justify-center items-center space-x-2 sm:space-x-4 mt-4 sm:mt-8">
               <button
                 onClick={() => setIsPlaying(!isPlaying)}
                 className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
@@ -491,7 +491,7 @@ export default function Home() {
                 <button
                   key={idx}
                   onClick={() => setCurrentTestimonial(idx)}
-                  className={`w-3 h-3 rounded-full transition-colors ${
+                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
                     idx === currentTestimonial ? 'bg-primary-600' : 'bg-gray-300'
                   }`}
                 />
@@ -502,24 +502,24 @@ export default function Home() {
       </section>
 
       {/* MEET THE OWNERS SECTION */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-10 sm:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8">
           <motion.div 
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
               Meet the Team
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               The Study Point Library Jiran is run by passionate individuals dedicated to providing the best study environment.
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-8">
             {owners.map((owner, idx) => (
               <motion.div
                 key={idx}
@@ -532,11 +532,11 @@ export default function Home() {
                 onHoverEnd={() => setHoveredOwner(null)}
                 className="flex flex-col items-center group cursor-pointer text-center h-full"
               >
-                <div className="relative mb-4">
+                <div className="relative mb-2 sm:mb-4">
                   <motion.img
                     src={owner.img}
                     alt={owner.name}
-                    className="w-32 h-32 rounded-full object-cover border-4 border-primary-600 shadow-lg"
+                    className="w-20 h-20 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-primary-600 shadow-lg"
                     animate={{ 
                       scale: hoveredOwner === idx ? 1.1 : 1,
                       rotateY: hoveredOwner === idx ? 180 : 0
@@ -548,14 +548,23 @@ export default function Home() {
                     animate={{ opacity: hoveredOwner === idx ? 1 : 0 }}
                     className="absolute inset-0 rounded-full bg-primary-600/20 flex items-center justify-center"
                   >
-                    <Heart className="w-8 h-8 text-primary-600" />
+                    <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600" />
                   </motion.div>
                 </div>
                 
+                {/* Owner details: always visible on mobile, animated on hover for desktop */}
+                {/* Mobile: always visible */}
+                <div className="block sm:hidden text-center w-full flex-1 flex flex-col justify-center">
+                  <div className="font-semibold text-gray-900 text-base mb-0.5 leading-tight">{owner.name}</div>
+                  <div className="text-primary-600 font-medium text-xs mb-1 leading-tight">{owner.role}</div>
+                  <div className="text-gray-600 text-xs mb-1 leading-tight">{owner.experience}</div>
+                  <p className="text-gray-500 text-xs leading-relaxed min-h-[2rem] flex items-center justify-center">{owner.bio}</p>
+                </div>
+                {/* Desktop: fade in on hover */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: hoveredOwner === idx ? 1 : 0, y: hoveredOwner === idx ? 0 : 10 }}
-                  className="text-center w-full flex-1 flex flex-col justify-center"
+                  className="hidden sm:flex text-center w-full flex-1 flex-col justify-center transition-opacity duration-300"
                 >
                   <div className="font-semibold text-gray-900 text-lg mb-1 leading-tight">{owner.name}</div>
                   <div className="text-primary-600 font-medium text-sm mb-2 leading-tight">{owner.role}</div>
@@ -569,24 +578,24 @@ export default function Home() {
       </section>
 
       {/* CTA SECTION */}
-      <section className="py-20 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-10 sm:py-20 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
               Ready to Start Your Study Journey?
             </h2>
-            <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-primary-100 mb-4 sm:mb-8 max-w-2xl mx-auto">
               Join hundreds of students who have found their perfect study environment with us.<br />
-              <span className="text-sm text-primary-200">Contact: thestudypointlibraryjeeran@gmail.com</span>
+              <span className="text-xs sm:text-sm text-primary-200">Contact: thestudypointlibraryjeeran@gmail.com</span>
             </p>
             <Link
               to="/booking"
-              className="inline-flex items-center justify-center px-8 py-4 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base"
             >
               <BookOpen className="w-5 h-5 mr-2" />
               Book Your Seat Now

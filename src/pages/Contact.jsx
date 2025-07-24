@@ -228,36 +228,24 @@ const Contact = () => {
           />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-8 sm:py-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
+            className="text-center"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium mb-6"
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              We're here to help!
-            </motion.div>
-
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-6">
               Get in Touch
             </h1>
-            <p className="text-xl text-primary-100 max-w-2xl mx-auto mb-8">
-              Have questions about our study rooms? We're here to help! 
-              Reach out to us and we'll get back to you as soon as possible.
+            <p className="text-base sm:text-xl text-primary-100 max-w-2xl mx-auto mb-4 sm:mb-8">
+              Have questions about our study rooms? We're here to help! Reach out to us and we'll get back to you as soon as possible.
             </p>
-
-            {/* Quick Stats */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto"
+              className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 max-w-2xl mx-auto"
             >
               <div className="text-center">
                 <div className="text-2xl font-bold mb-1">365</div>
@@ -277,8 +265,8 @@ const Contact = () => {
       </section>
 
       {/* Main Content Grid: Contact Info and Contact Form side by side */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-6 sm:py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10 items-start">
           {/* Contact Information */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
@@ -670,23 +658,23 @@ const Contact = () => {
         </motion.section>
 
       {/* FAQ SECTION AT BOTTOM */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-8 sm:py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8">
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Find answers to common questions about booking, facilities, and our library policies.
             </p>
           </motion.div>
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
             {[
               { question: "How do I book a seat?", answer: "Go to the Booking page, select your date and seat, fill in your details, and complete the payment online." },
               { question: "What are your operating hours?", answer: "We are open from 6:30 AM to 11:00 PM, 7 days a week, including holidays." },

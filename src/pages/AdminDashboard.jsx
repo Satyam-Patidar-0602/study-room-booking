@@ -421,16 +421,16 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8">
+          <div className="flex justify-between items-center py-4 sm:py-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage students, bookings, and seats</p>
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-xs sm:text-sm text-gray-600">Manage students, bookings, and seats</p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={() => fetchAllData()}
-                className="btn-secondary"
+                className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
               >
                 Refresh Data
               </button>
@@ -439,17 +439,17 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-4 sm:py-8">
         {/* Tabs */}
-        <div className="mb-8">
-          <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 -mx-2 px-2">
+        <div className="mb-4 sm:mb-8">
+          <nav className="flex space-x-2 sm:space-x-4 md:space-x-8 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 -mx-2 px-2">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-1 sm:space-x-2 py-2 px-1 border-b-2 font-medium text-xs sm:text-sm ${
+                  className={`flex items-center space-x-1 sm:space-x-2 py-1.5 sm:py-2 px-1 border-b-2 font-medium text-xs sm:text-sm ${
                     activeTab === tab.id
                       ? 'border-primary-500 text-primary-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'

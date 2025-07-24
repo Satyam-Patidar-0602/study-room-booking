@@ -510,30 +510,30 @@ const StudentResources = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-8 sm:py-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-6">
               Student Resources Hub
             </h1>
-            <p className="text-xl text-primary-100 max-w-3xl mx-auto">
+            <p className="text-base sm:text-xl text-primary-100 max-w-3xl mx-auto">
               Everything you need for successful exam preparation. Study materials, tools, and tips to help you excel.
             </p>
           </motion.div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-6 sm:py-12">
         {/* Navigation Tabs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-8"
+          className="mb-4 sm:mb-8"
         >
           <div className="flex flex-wrap gap-2 justify-center">
             {[

@@ -268,254 +268,232 @@ const News = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-8 sm:py-16">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
+            className="text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Study Point Library - Latest {capitalizeFirstLetter(category)} News
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-6">
+              Latest News & Updates
             </h1>
-            <p className="text-xl text-primary-100 max-w-3xl mx-auto">
-              Stay informed with the latest global news, educational insights, and updates from around the world. 
-              Knowledge is power, and we're here to keep you connected.
+            <p className="text-base sm:text-xl text-primary-100 max-w-2xl mx-auto mb-4 sm:mb-8">
+              Stay updated with the latest news, events, and educational resources.
             </p>
           </motion.div>
         </div>
       </section>
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-6 sm:py-12">
+        {/* Search and Filter Section */}
+        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between mb-6 sm:mb-8">
+          {/* Search Bar */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <form onSubmit={handleSearch}>
+              <input
+                type="text"
+                placeholder={`Search ${capitalizeFirstLetter(category)} news...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+              />
+            </form>
+          </div>
 
-      {/* Search and Filter Section */}
-      <section className="py-8 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
-            {/* Search Bar */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <form onSubmit={handleSearch}>
-                <input
-                  type="text"
-                  placeholder={`Search ${capitalizeFirstLetter(category)} news...`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                />
-              </form>
-            </div>
-
-            {/* Category Filter */}
-            <div className="flex gap-2">
-              {categories.map((cat) => {
-                const Icon = cat.icon
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleCategoryChange(cat.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                      category === cat.id
-                        ? 'bg-primary-600 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{cat.name}</span>
-                  </button>
-                )
-              })}
-            </div>
+          {/* Category Filter */}
+          <div className="flex gap-2">
+            {categories.map((cat) => {
+              const Icon = cat.icon
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                    category === cat.id
+                      ? 'bg-primary-600 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{cat.name}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
-      </section>
 
-      {/* News Content */}
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4"
-            >
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <Globe className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">
-                    Live News Temporarily Unavailable
-                  </h3>
-                  <div className="mt-2 text-sm text-blue-700">
-                    <p>{error}</p>
-                    <p className="mt-1 font-medium">
-                      Showing curated library news and updates below.
-                    </p>
-                  </div>
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4"
+          >
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Globe className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Live News Temporarily Unavailable
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>{error}</p>
+                  <p className="mt-1 font-medium">
+                    Showing curated library news and updates below.
+                  </p>
                 </div>
               </div>
-            </motion.div>
-          )}
+            </div>
+          </motion.div>
+        )}
 
-          {/* News Grid */}
+        {/* News Articles Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
+          {paginatedArticles.map((article, index) => (
+            <motion.article
+              key={`${article.title}-${index}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
+            >
+              {/* Article Image */}
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={article.urlToImage || 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400'}
+                  alt={article.title}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400'
+                  }}
+                />
+                <div className="absolute top-3 left-3">
+                  <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                    {article.source.name || 'News'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Article Content */}
+              <div className="p-6">
+                <div className="flex items-center text-gray-500 text-sm mb-3">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  {formatDate(article.publishedAt)}
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
+                  {article.title}
+                </h3>
+                <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                  {article.description}
+                </p>
+                <a
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium text-sm transition-colors"
+                >
+                  Read More
+                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              </div>
+            </motion.article>
+          ))}
+        </div>
+
+        {/* Loading State */}
+        {loading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="mt-8 text-center"
           >
-            {paginatedArticles.map((article, index) => (
-              <motion.article
-                key={`${article.title}-${index}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
-              >
-                {/* Article Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={article.urlToImage || 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400'}
-                    alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400'
-                    }}
-                  />
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {article.source.name || 'News'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Article Content */}
-                <div className="p-6">
-                  <div className="flex items-center text-gray-500 text-sm mb-3">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    {formatDate(article.publishedAt)}
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
-                    {article.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                    {article.description}
-                  </p>
-                  <a
-                    href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium text-sm transition-colors"
-                  >
-                    Read More
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </a>
-                </div>
-              </motion.article>
-            ))}
+            <div className="inline-flex items-center text-gray-500">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mr-2"></div>
+              <span>Loading more news...</span>
+            </div>
           </motion.div>
+        )}
 
-          {/* Loading State */}
-          {loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-8 text-center"
-            >
-              <div className="inline-flex items-center text-gray-500">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mr-2"></div>
-                <span>Loading more news...</span>
-              </div>
-            </motion.div>
-          )}
+        {/* Pagination Controls */}
+        <div className="flex justify-center items-center mt-6 gap-2 sm:gap-4">
+          {/* First Page */}
+          <button
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronsLeft className="w-4 h-4" />
+          </button>
 
-          {/* Pagination */}
-          {totalPages > 1 && !loading && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-12 flex justify-center"
-            >
-              <div className="flex items-center space-x-2 bg-white rounded-lg shadow-lg p-2">
-                {/* First Page */}
+          {/* Previous Page */}
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Page Numbers */}
+          {getVisiblePages().map((pageNum, index) => (
+            <div key={index}>
+              {pageNum === '...' ? (
+                <span className="px-3 py-2 text-gray-500">...</span>
+              ) : (
                 <button
-                  onClick={() => handlePageChange(1)}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`px-3 py-2 rounded-lg transition-colors ${
+                    currentPage === pageNum
+                      ? 'bg-primary-600 text-white'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
                 >
-                  <ChevronsLeft className="w-4 h-4" />
+                  {pageNum}
                 </button>
+              )}
+            </div>
+          ))}
 
-                {/* Previous Page */}
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
+          {/* Next Page */}
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
 
-                {/* Page Numbers */}
-                {getVisiblePages().map((pageNum, index) => (
-                  <div key={index}>
-                    {pageNum === '...' ? (
-                      <span className="px-3 py-2 text-gray-500">...</span>
-                    ) : (
-                      <button
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`px-3 py-2 rounded-lg transition-colors ${
-                          currentPage === pageNum
-                            ? 'bg-primary-600 text-white'
-                            : 'hover:bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    )}
-                  </div>
-                ))}
-
-                {/* Next Page */}
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-
-                {/* Last Page */}
-                <button
-                  onClick={() => handlePageChange(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronsRight className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* End of News Message */}
-          {articles.length >= totalResults && totalResults > 0 && !loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-8 text-center"
-            >
-              <div className="text-gray-500 text-sm">
-                <p>You've reached the end of available news.</p>
-                <p className="mt-1">
-                  Showing {articles.length} articles
-                </p>
-              </div>
-            </motion.div>
-          )}
+          {/* Last Page */}
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronsRight className="w-4 h-4" />
+          </button>
         </div>
-      </section>
+
+        {/* End of News Message */}
+        {articles.length >= totalResults && totalResults > 0 && !loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-8 text-center"
+          >
+            <div className="text-gray-500 text-sm">
+              <p>You've reached the end of available news.</p>
+              <p className="mt-1">
+                Showing {articles.length} articles
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </div>
 
       {/* About Section */}
       <motion.section

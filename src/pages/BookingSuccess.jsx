@@ -211,36 +211,28 @@ const BookingSuccess = () => {
     : 'N/A';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
-      {/* Hidden card for PDF generation only */}
-      <div style={{ position: 'fixed', left: '-9999px', top: 0, width: 480 }}>
-        <div ref={hiddenCardRef}>
-          <BookingIdCard bookingDetails={{ ...bookingDetails, qrValue }} />
-        </div>
-      </div>
-      {/* Visible content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-2xl mx-auto px-2 sm:px-4 md:px-8 py-8 sm:py-16">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          transition={{ duration: 0.6 }}
+          className="text-center"
         >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4"
-          >
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Booking Confirmed! 🎉
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-6">
+            Booking Confirmed!
           </h1>
-          <p className="text-lg text-gray-600">
-            Your Study Point Library ID Card is ready
+          <p className="text-base sm:text-xl text-primary-700 max-w-xl mx-auto mb-4 sm:mb-8">
+            Thank you for booking your study seat. Your details are below. You can download your booking ID card as a PDF.
           </p>
         </motion.div>
-        {/* ID Card Display - this is what will be exported */}
+        {/* Hidden card for PDF generation only */}
+        <div style={{ position: 'fixed', left: '-9999px', top: 0, width: 480 }}>
+          <div ref={hiddenCardRef}>
+            <BookingIdCard bookingDetails={{ ...bookingDetails, qrValue }} />
+          </div>
+        </div>
+        {/* Visible content */}
         <motion.div
           ref={cardRef}
           initial={{ opacity: 0, scale: 0.9 }}
