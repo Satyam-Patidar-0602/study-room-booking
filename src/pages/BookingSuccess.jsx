@@ -17,6 +17,7 @@ import {
 import { QRCodeCanvas } from 'qrcode.react'
 import { getUploadUrl, getFallbackUrl, getBaseUrl } from '../config/urls'
 import BookingIdCard from '../components/BookingIdCard'
+import { createRoot } from 'react-dom/client';
 
 const BookingSuccess = () => {
   const location = useLocation()
@@ -124,8 +125,18 @@ const BookingSuccess = () => {
 
   // 2. In handleDownloadIDCard, just download the PDF (no upload logic)
   const handleDownloadIDCard = async () => {
-    if (!hiddenCardRef.current) return;
-    const canvas = await html2canvas(hiddenCardRef.current, { backgroundColor: null, scale: 2 });
+    if (!hiddenCardRef.current || !pdfUrl) return;
+    // Render the BookingIdCard with the correct qrValue for download
+    const downloadContainer = document.createElement('div');
+    downloadContainer.style.position = 'fixed';
+    downloadContainer.style.left = '-9999px';
+    downloadContainer.style.top = '0';
+    document.body.appendChild(downloadContainer);
+    const root = createRoot(downloadContainer);
+    root.render(<BookingIdCard bookingDetails={{ ...bookingDetails, qrValue: pdfUrl }} />);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const cardNode = downloadContainer.firstChild;
+    const canvas = await html2canvas(cardNode, { backgroundColor: null, scale: 2 });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -136,6 +147,8 @@ const BookingSuccess = () => {
     const y = (pageHeight - imgHeight) / 2;
     pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
     pdf.save('StudyPoint_IDCard.pdf');
+    root.unmount();
+    document.body.removeChild(downloadContainer);
   };
 
   // When navigating from Booking.jsx, save bookingDetails to localStorage

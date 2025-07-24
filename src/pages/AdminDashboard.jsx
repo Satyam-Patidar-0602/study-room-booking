@@ -1214,7 +1214,16 @@ const AdminDashboard = () => {
                 <input
                   type="date"
                   required
-                  value={bookingForm.startDate}
+                  value={bookingForm.startDate || (() => {
+                    const today = new Date();
+                    return today.toISOString().split('T')[0];
+                  })()}
+                  max={(() => {
+                    const today = new Date();
+                    const dayAfterTomorrow = new Date(today);
+                    dayAfterTomorrow.setDate(today.getDate() + 2);
+                    return dayAfterTomorrow.toISOString().split('T')[0];
+                  })()}
                   onChange={(e) => setBookingForm(prev => ({ ...prev, startDate: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
