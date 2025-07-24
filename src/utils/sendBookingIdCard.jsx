@@ -52,7 +52,7 @@ export async function sendBookingIdCardPDF({ bookingDetails, email, onComplete }
   const pdfUrl = uploadRes.data.url;
 
   // 6. Send email
-  await axios.post(`${getBaseUrl()}/api/send-booking-email`, {
+  await axios.post(`${getBaseUrl()}/api/upload-pdf/send-booking-email`, {
     email,
     name: bookingDetails.name,
     pdfUrl,
