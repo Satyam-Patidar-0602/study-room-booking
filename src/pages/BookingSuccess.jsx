@@ -202,7 +202,7 @@ const BookingSuccess = () => {
       {/* Hidden card for PDF generation only */}
       <div style={{ position: 'fixed', left: '-9999px', top: 0, width: 480 }}>
         <div ref={hiddenCardRef}>
-          <BookingIdCard bookingDetails={bookingDetails} />
+          <BookingIdCard bookingDetails={{ ...bookingDetails, qrValue }} />
         </div>
       </div>
       {/* Visible content */}

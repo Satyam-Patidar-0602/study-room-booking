@@ -24,7 +24,7 @@ export async function sendBookingIdCardPDF({ bookingDetails, email, onComplete }
 
   // 2. Render the card
   const root = createRoot(container);
-  root.render(<BookingIdCard bookingDetails={bookingDetails} />);
+  root.render(<BookingIdCard bookingDetails={{ ...bookingDetails, qrValue: undefined }} />);
 
   // 3. Wait for render
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -51,6 +51,10 @@ export async function sendBookingIdCardPDF({ bookingDetails, email, onComplete }
   });
   if (!uploadRes.data.success) throw new Error('PDF upload failed');
   const pdfUrl = uploadRes.data.url;
+
+  // Update the card with the real PDF URL for the QR code
+  root.render(<BookingIdCard bookingDetails={{ ...bookingDetails, qrValue: pdfUrl }} />);
+  await new Promise(resolve => setTimeout(resolve, 200));
 
   // 6. Send email
   await axios.post(`${getBaseUrl()}/api/upload-pdf/send-booking-email`, {

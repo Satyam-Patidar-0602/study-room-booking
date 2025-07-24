@@ -201,13 +201,13 @@ const AdminDashboard = () => {
         toast.error('Student not found or missing email');
         return;
       }
-      const seat = seats.find(s => s.id === bookingForm.seatId)
+      const seat = seats.find(s => String(s.id) === String(bookingForm.seatId));
       sendBookingIdCardPDF({
         bookingDetails: {
           name: student.name,
           email: student.email,
           phone: student.phone,
-          seats: seat ? `Seat ${seat.seat_number}` : '',
+          seats: seat ? `Seat ${seat.seat_number}` : 'N/A',
           totalAmount: bookingForm.totalAmount,
           date: bookingForm.startDate,
           duration: bookingForm.duration,
