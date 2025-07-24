@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const path = require('path');
 
 const bookingsRouter = require('./routes/bookings');
 const uploadRoutes = require('./routes/upload-local');
@@ -69,6 +70,9 @@ app.get('/health', (req, res) => {
     uptime: process.uptime()
   });
 });
+
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API routes
 app.use('/api/bookings', bookingsRouter);
