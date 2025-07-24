@@ -72,7 +72,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/bookings', bookingsRouter);
-app.use('/api', uploadRoutes);
+app.use('/api/upload-pdf', uploadRoutes);
 app.use('/api/cashfree', cashfreeRoutes);
 app.use('/api/contact', contactRoute);
 app.use('/api/admin', adminRoutes);
