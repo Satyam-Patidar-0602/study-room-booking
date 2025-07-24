@@ -22,27 +22,37 @@ export async function sendBookingIdCardPDF({ bookingDetails, email, onComplete }
   container.style.top = '0';
   document.body.appendChild(container);
 
-  // 2. Render the card
+  // --- Ensure seat number is always included ---
+  let seatInfo = bookingDetails.seats;
+  if (!seatInfo && bookingDetails.seatId && Array.isArray(window.seats)) {
+    // Try to find the seat in the global seats array if available
+    const seat = window.seats.find(s => String(s.id) === String(bookingDetails.seatId));
+    seatInfo = seat ? `Seat ${seat.seat_number}` : 'N/A';
+    console.log('Admin PDF seat lookup:', bookingDetails.seatId, seat, window.seats);
+  } else if (!seatInfo) {
+    seatInfo = 'N/A';
+    console.warn('No seat info found for bookingDetails:', bookingDetails);
+  }
+
+  // 2. Render the card with fallback QR (will update after upload)
   const root = createRoot(container);
-  root.render(<BookingIdCard bookingDetails={{ ...bookingDetails, qrValue: undefined }} />);
+  root.render(<BookingIdCard bookingDetails={{ ...bookingDetails, seats: seatInfo, qrValue: undefined }} />);
+  await new Promise(resolve => setTimeout(resolve, 300));
 
-  // 3. Wait for render
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  // 4. Generate PDF from card
+  // 3. Generate initial PDF (not used, but keeps logic consistent)
   const cardNode = container.firstChild;
-  const canvas = await html2canvas(cardNode, { backgroundColor: null, scale: 2 });
-  const imgData = canvas.toDataURL('image/png');
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = 120;
-  const imgHeight = (canvas.height / canvas.width) * imgWidth;
-  const x = (pageWidth - imgWidth) / 2;
-  const y = (pageHeight - imgHeight) / 2;
+  let canvas = await html2canvas(cardNode, { backgroundColor: null, scale: 2 });
+  let imgData = canvas.toDataURL('image/png');
+  let pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  let pageWidth = pdf.internal.pageSize.getWidth();
+  let pageHeight = pdf.internal.pageSize.getHeight();
+  let imgWidth = 120;
+  let imgHeight = (canvas.height / canvas.width) * imgWidth;
+  let x = (pageWidth - imgWidth) / 2;
+  let y = (pageHeight - imgHeight) / 2;
   pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
 
-  // 5. Upload PDF
+  // 4. Upload PDF
   const pdfBlob = pdf.output('blob');
   const formData = new FormData();
   formData.append('pdf', pdfBlob, 'booking-id-card.pdf');
@@ -52,25 +62,39 @@ export async function sendBookingIdCardPDF({ bookingDetails, email, onComplete }
   if (!uploadRes.data.success) throw new Error('PDF upload failed');
   const pdfUrl = uploadRes.data.url;
 
-  // Update the card with the real PDF URL for the QR code
-  root.render(<BookingIdCard bookingDetails={{ ...bookingDetails, qrValue: pdfUrl }} />);
-  await new Promise(resolve => setTimeout(resolve, 200));
+  // 5. Re-render the card with the real PDF URL for the QR code
+  root.render(<BookingIdCard bookingDetails={{ ...bookingDetails, seats: seatInfo, qrValue: pdfUrl }} />);
+  await new Promise(resolve => setTimeout(resolve, 300));
 
-  // 6. Send email
+  // 6. Regenerate the PDF with the correct QR code
+  const cardNode2 = container.firstChild;
+  canvas = await html2canvas(cardNode2, { backgroundColor: null, scale: 2 });
+  imgData = canvas.toDataURL('image/png');
+  pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  pageWidth = pdf.internal.pageSize.getWidth();
+  pageHeight = pdf.internal.pageSize.getHeight();
+  imgWidth = 120;
+  imgHeight = (canvas.height / canvas.width) * imgWidth;
+  x = (pageWidth - imgWidth) / 2;
+  y = (pageHeight - imgHeight) / 2;
+  pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+
+  // 7. Send email with the correct PDF URL and seat info
   await axios.post(`${getBaseUrl()}/api/upload-pdf/send-booking-email`, {
     email,
     name: bookingDetails.name,
     pdfUrl,
     bookingDetails: {
       ...bookingDetails,
-      seats: Array.isArray(bookingDetails.seats) ? bookingDetails.seats.join(', ') : bookingDetails.seats,
+      seats: seatInfo,
+      qrValue: pdfUrl,
       bookingDate: bookingDetails.date,
       expiryDate: bookingDetails.expiryDate,
       totalAmount: bookingDetails.totalAmount,
     },
   });
 
-  // 7. Cleanup
+  // 8. Cleanup
   root.unmount();
   document.body.removeChild(container);
   if (onComplete) onComplete();

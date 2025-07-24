@@ -23,7 +23,7 @@ const BookingIdCard = ({ bookingDetails }) => {
     : 'N/A';
   const cardId = bookingDetails.cardId || `SP${Math.random().toString().substr(2, 8).toUpperCase()}`;
   const bookingNumber = bookingDetails.bookingNumber || `BK${Math.random().toString().substr(2, 6)}`;
-  const qrValue = bookingDetails.qrValue || 'https://thestudypointlibraryjeeran.com';
+  const qrValue = bookingDetails.qrValue || 'https://studypointlibrary.vercel.app/';
   const getExpiryDate = (startDate, subscriptionPeriod) => {
     const start = new Date(startDate)
     const days = subscriptionPeriod === '0.5' ? 15 : 30
