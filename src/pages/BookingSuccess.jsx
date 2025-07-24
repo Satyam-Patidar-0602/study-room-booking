@@ -26,24 +26,24 @@ const BookingSuccess = () => {
   const [pdfUrl, setPdfUrl] = useState(null);
 
   useEffect(() => {
-    if (location.state?.bookingDetails) {
-      setBookingDetails(location.state.bookingDetails)
-    } else {
-      setBookingDetails({
-        name: 'Demo User',
-        email: 'demo@example.com',
-        phone: '+91 98765 43210',
-        date: new Date(),
-        duration: '4',
-        seats: ['Owner Allocated'],
-        totalAmount: 300,
-        subscriptionPeriod: '1month'
-      })
+    // Try to get bookingDetails from location.state or localStorage
+    let details = location.state?.bookingDetails;
+    if (!details) {
+      try {
+        const stored = localStorage.getItem('bookingDetails');
+        if (stored) details = JSON.parse(stored);
+      } catch (e) { details = null; }
     }
-  }, [location])
+    if (details) {
+      setBookingDetails(details);
+    } else {
+      setBookingDetails(null);
+    }
+  }, [location.state]);
 
   // 1. Add useEffect to auto-generate and upload PDF after bookingDetails is set
   useEffect(() => {
+    console.log('BookingDetails:', bookingDetails);
     if (!bookingDetails) return;
     (async () => {
       if (!hiddenCardRef.current) return; // Use hidden card
@@ -137,6 +137,13 @@ const BookingSuccess = () => {
     pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
     pdf.save('StudyPoint_IDCard.pdf');
   };
+
+  // When navigating from Booking.jsx, save bookingDetails to localStorage
+  useEffect(() => {
+    if (location.state?.bookingDetails) {
+      localStorage.setItem('bookingDetails', JSON.stringify(location.state.bookingDetails));
+    }
+  }, [location.state]);
 
   if (!bookingDetails) {
     return (
