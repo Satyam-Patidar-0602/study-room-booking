@@ -10,9 +10,13 @@ const BookingIdCard = ({ bookingDetails }) => {
   const phone = bookingDetails.phone ? String(bookingDetails.phone) : 'N/A';
   let seats = 'N/A';
   if (Array.isArray(bookingDetails.seats) && bookingDetails.seats.length > 0) {
-    seats = bookingDetails.seats.map(seatId => `Seat ${seatId}`).join(', ');
-  } else if (typeof bookingDetails.seats === 'number' || typeof bookingDetails.seats === 'string') {
+    seats = bookingDetails.seats
+      .map(seatId => typeof seatId === 'number' ? `Seat ${seatId}` : seatId)
+      .join(', ');
+  } else if (typeof bookingDetails.seats === 'number') {
     seats = `Seat ${bookingDetails.seats}`;
+  } else if (typeof bookingDetails.seats === 'string') {
+    seats = bookingDetails.seats;
   }
   const durationLabel =
     bookingDetails.duration === '4'
