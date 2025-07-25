@@ -706,12 +706,12 @@ const Booking = () => {
                       <>
                         {/* Column labels for desktop */}
                         <div className="hidden md:flex w-full mb-2">
-                          <div className="flex-1 text-center font-semibold text-gray-700">Column 1</div>
-                          <div className="flex-1 text-center font-semibold text-gray-700">Column 2</div>
+                          <div className="flex-1 text-center font-semibold text-gray-700">Column 1 (1-11)</div>
+                          <div className="flex-1 text-center font-semibold text-gray-700">Column 2 (12-22)</div>
                         </div>
                         {/* Responsive seat grid: two columns with labels on desktop, two columns on mobile */}
                         <div className="mb-6" id="seat-grid">
-                          {/* Desktop: one column label only */}
+                          {/* Desktop: two columns with labels and correct seat ranges */}
                           <div className="hidden md:flex w-full gap-2">
                             <div className="flex-1">
                               <div className="grid grid-cols-1 gap-2">
