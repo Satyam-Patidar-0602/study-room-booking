@@ -171,7 +171,11 @@ router.get('/booked-seats-next-three', async (req, res) => {
       WHERE b.status = 'active'
         AND b.seat_id IS NOT NULL
         AND b.duration_type = 'fulltime'
-        AND b.start_date IN ($1, $2, $3)
+        AND (
+          ($1 BETWEEN b.start_date AND (b.start_date + INTERVAL '1 day' * (CASE WHEN b.subscription_period = '0.5' THEN 15 ELSE 30 END)))
+          OR ($2 BETWEEN b.start_date AND (b.start_date + INTERVAL '1 day' * (CASE WHEN b.subscription_period = '0.5' THEN 15 ELSE 30 END)))
+          OR ($3 BETWEEN b.start_date AND (b.start_date + INTERVAL '1 day' * (CASE WHEN b.subscription_period = '0.5' THEN 15 ELSE 30 END)))
+        )
     `;
     const result = await db.query(query, dates);
     res.json({ success: true, data: result.rows });

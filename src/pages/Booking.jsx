@@ -33,6 +33,7 @@ import toast from 'react-hot-toast'
 import { bookingAPI, apiUtils } from '../services/api'
 import { load as loadCashfree } from '@cashfreepayments/cashfree-js';
 import { getBaseUrl } from '../config/urls';
+import { Link } from 'react-router-dom';
 
 // Remove loadCashfreeScript and window.Cashfree usage
 
@@ -61,11 +62,41 @@ const Booking = () => {
     { value: '0.5', label: '15 Days', price: 300 }
   ]
 
-  // Duration options
-  const durationOptions = [
-    { value: '4', label: '4 Hours (Morning/Evening)', price: 400, icon: <Clock className="w-5 h-5" />, color: 'from-blue-500 to-blue-600', seatAllocation: 'owner' },
-    { value: 'full', label: 'Full Time', price: 600, icon: <Timer className="w-5 h-5" />, color: 'from-purple-500 to-purple-600', seatAllocation: 'user' }
-  ]
+  // Track if the user is booking the evening slot
+  const [isEvening, setIsEvening] = useState(false);
+
+  // Duration options: always show '4 Hours (Morning/Evening)' on first step, then '4 Hours (Evening)' after continue
+  const dynamicDurationOptions = [
+    {
+      value: '4',
+      label: (
+        <>
+          <span>4 Hours</span>
+          <br />
+          <span>Morning/Evening</span>
+        </>
+      ),
+      price: 400,
+      icon: <Clock className="w-5 h-5" />,
+      color: 'from-blue-500 to-blue-600',
+      seatAllocation: 'owner'
+    },
+    {
+      value: 'full',
+      label: 'Full Time',
+      price: 600,
+      icon: <Timer className="w-5 h-5" />,
+      color: 'from-purple-500 to-purple-600',
+      seatAllocation: 'user'
+    }
+  ];
+
+  // When the user clicks Continue, if 4 Hours is selected, set isEvening to true for the next booking
+  useEffect(() => {
+    if (bookingData.duration === '4') {
+      setIsEvening(true)
+    }
+  }, [bookingData.duration]);
 
   // Features showcase
   const features = [
@@ -234,6 +265,16 @@ const Booking = () => {
     }))
   }
 
+  // Add a helper to scroll to the booking form
+  const scrollToBookingForm = () => {
+    const el = document.getElementById('booking-form');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleNextStep = async () => {
     if (currentStep === 1) {
       if (!selectedDate) {
@@ -242,16 +283,20 @@ const Booking = () => {
       }
       
       // For full-time bookings, require seat selection
-      if (durationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'user' && selectedSeats.length === 0) {
+      if (dynamicDurationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'user' && selectedSeats.length === 0) {
         toast.error('Please select at least one seat')
         return
       }
       
       setCurrentStep(2)
+      scrollToBookingForm()
+      if (bookingData.duration === '4') {
+        setIsEvening(true)
+      }
     } else if (currentStep === 2) {
       if (!bookingData.name || !bookingData.email || !bookingData.phone) {
-        toast.error('Please fill in all required fields')
-        return
+        toast.error('Please fill in all required details (Name, Email, Phone).');
+        return;
       }
       await handleBooking()
     }
@@ -341,7 +386,6 @@ const Booking = () => {
 
   const handleBooking = async () => {
     setIsLoading(true)
-    
     try {
       // Validate booking data
       const validationErrors = apiUtils.validateBookingData({
@@ -352,33 +396,27 @@ const Booking = () => {
         subscriptionPeriod: bookingData.subscriptionPeriod,
         selectedSeats
       })
-
       if (validationErrors.length > 0) {
-        toast.error(validationErrors[0])
+        toast.error(validationErrors[0] || 'Please check your booking details.')
         setIsLoading(false)
         return
       }
-
       // Prepare booking data for API
       const bookingDataForAPI = {
         name: bookingData.name,
         email: bookingData.email,
         phone: bookingData.phone,
         startDate: apiUtils.formatDateForAPI(selectedDate),
-        startTime: selectedTime || '09:00', // Default time if not selected
+        startTime: selectedTime || '09:00',
         durationType: bookingData.duration === '4' ? '4hours' : 'fulltime',
         subscriptionPeriod: bookingData.subscriptionPeriod,
         selectedSeats: bookingData.duration === 'full' ? selectedSeats : [],
         totalAmount: calculateTotal()
       }
-
       // Create booking via API
       const response = await bookingAPI.createBooking(bookingDataForAPI)
-      
       if (response.success) {
         toast.success('Booking successful! Redirecting to confirmation...')
-        
-        // Navigate to success page after a short delay
         setTimeout(() => {
           const bookingDetailsForSuccess = {
             name: bookingData.name,
@@ -391,7 +429,6 @@ const Booking = () => {
             totalAmount: calculateTotal(),
             paymentDetails: response?.data?.paymentDetails || null
           };
-          
           navigate('/booking-success', {
             state: {
               bookingDetails: bookingDetailsForSuccess
@@ -399,11 +436,13 @@ const Booking = () => {
           })
         }, 1500)
       } else {
-        toast.error(response.error || 'Booking failed')
+        toast.error(response.error || 'Booking failed. Please try again.')
+        console.error('Booking API error:', response)
       }
     } catch (error) {
       const errorInfo = apiUtils.handleError(error)
-      toast.error(errorInfo.message)
+      toast.error(errorInfo.message || 'An unexpected error occurred. Please try again.')
+      console.error('Booking error:', error)
     } finally {
       setIsLoading(false)
     }
@@ -416,7 +455,7 @@ const Booking = () => {
   }
 
   const calculateTotal = () => {
-    const selectedDuration = durationOptions.find(d => d.value === bookingData.duration)
+    const selectedDuration = dynamicDurationOptions.find(d => d.value === bookingData.duration)
     const pricePerSeat = selectedDuration ? selectedDuration.price : 600;
     // For 4 hours booking, always charge for 1 seat (owner allocates seat, user doesn't select)
     if (bookingData.duration === '4') {
@@ -446,26 +485,25 @@ const Booking = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* 1. Compact hero section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-8 sm:py-16">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-6 sm:py-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-6">
-              Book Your Study Seat
-            </h1>
-            <p className="text-base sm:text-xl text-primary-100 max-w-2xl mx-auto mb-4 sm:mb-8">
-              Reserve your spot and enjoy a productive study environment.
+            <h1 className="text-xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-6">Book Your Study Seat</h1>
+            <p className="text-sm sm:text-xl text-primary-100 max-w-2xl mx-auto mb-4 sm:mb-8">
+              Pick your date, time, and seat. Study in comfort and focus.
             </p>
           </motion.div>
         </div>
       </section>
-      <div className="max-w-3xl mx-auto px-2 sm:px-4 md:px-8 py-6 sm:py-12">
+      <div id="booking-form" className="max-w-3xl mx-auto px-2 sm:px-4 md:px-8 py-4 sm:py-12">
         {/* Booking Steps and Forms */}
-        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 md:p-8 space-y-4 sm:space-y-8">
+        <div className="bg-white rounded-xl shadow-lg p-2 sm:p-6 md:p-8 space-y-4 sm:space-y-8">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -492,37 +530,24 @@ const Booking = () => {
           </motion.div>
 
           {/* Progress Steps */}
-          <motion.div 
-            className="flex justify-center mb-8"
+          {/* 2. Stepper: stack vertically on mobile */}
+          <motion.div
+            className="flex flex-col sm:flex-row items-center justify-center mb-6 sm:mb-8 w-full max-w-2xl mx-auto gap-2 sm:gap-0"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center ${currentStep >= 1 ? 'text-primary-600' : 'text-gray-400'}`}>
-                <motion.div 
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                    currentStep >= 1 ? 'bg-primary-600 border-primary-600 text-white' : 'border-gray-300'
-                  }`}
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {currentStep > 1 ? <CheckCircle className="w-5 h-5" /> : '1'}
-                </motion.div>
-                <span className="ml-3 font-medium">Select Subscription</span>
+            <div className="flex-1 flex flex-col sm:flex-row items-center">
+              <div className={`flex flex-col items-center w-full sm:w-32 ${currentStep >= 1 ? 'text-primary-600' : 'text-gray-400'}`}> 
+                <BookOpen className={`w-6 h-6 sm:w-8 sm:h-8 mb-1 ${currentStep >= 1 ? 'text-primary-600' : 'text-gray-400'}`} />
+                <span className="font-semibold text-xs sm:text-base">Subscription</span>
+                <div className={`h-1 w-full mt-2 rounded-full ${currentStep > 1 ? 'bg-primary-600' : 'bg-gray-300'}`}></div>
               </div>
-              <div className="w-8 h-1 bg-gray-300"></div>
-              <div className={`flex items-center ${currentStep >= 2 ? 'text-primary-600' : 'text-gray-400'}`}>
-                <motion.div 
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                    currentStep >= 2 ? 'bg-primary-600 border-primary-600 text-white' : 'border-gray-300'
-                  }`}
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  2
-                </motion.div>
-                <span className="ml-3 font-medium">Details</span>
+              <div className="hidden sm:block flex-1 h-1 bg-gradient-to-r from-primary-600 to-gray-300 mx-2 rounded-full" style={{ opacity: currentStep > 1 ? 1 : 0.5 }}></div>
+              <div className={`flex flex-col items-center w-full sm:w-32 ${currentStep >= 2 ? 'text-primary-600' : 'text-gray-400'}`}> 
+                <User className={`w-6 h-6 sm:w-8 sm:h-8 mb-1 ${currentStep >= 2 ? 'text-primary-600' : 'text-gray-400'}`} />
+                <span className="font-semibold text-xs sm:text-base">Details</span>
+                <div className={`h-1 w-full mt-2 rounded-full ${currentStep === 2 ? 'bg-primary-600' : 'bg-gray-300'}`}></div>
               </div>
             </div>
           </motion.div>
@@ -603,37 +628,34 @@ const Booking = () => {
                       Choose Your Duration
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {durationOptions.map((option, idx) => (
+                      {dynamicDurationOptions.map((option, idx) => (
                         <motion.div
                           key={option.value}
                           whileHover={{ scale: 1.02, y: -2 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all duration-200 ${
+                          className={`relative cursor-pointer rounded-xl p-2 md:p-3 border-2 transition-all duration-200 ${
                             bookingData.duration === option.value
                               ? 'border-primary-500 bg-primary-50 shadow-lg'
                               : 'border-gray-200 hover:border-primary-300'
                           }`}
                           onClick={() => setBookingData(prev => ({ ...prev, duration: option.value }))}
                         >
+                          {/* Corner checkmark icon when selected */}
+                          {bookingData.duration === option.value && (
+                            <span className="absolute top-2 right-2 md:top-3 md:right-3 z-10">
+                              <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-primary-500 drop-shadow" />
+                            </span>
+                          )}
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${option.color} flex items-center justify-center text-white`}>
+                            <div className="flex items-center space-x-2 md:space-x-3">
+                              <div className={`w-5 h-5 md:w-7 md:h-7 rounded-lg bg-gradient-to-br ${option.color} flex items-center justify-center text-white`}>
                                 {option.icon}
                               </div>
-                              <div>
-                                <h4 className="font-semibold text-gray-900">{option.label}</h4>
-                                <p className="text-sm text-gray-600">₹{option.price} per seat</p>
+                              <div className="max-w-[150px] min-h-[44px] text-[14px] font-extrabold text-primary-800 bg-white py-1.5 rounded leading-snug flex flex-col items-center justify-center text-center break-words whitespace-normal">
+                                <span>{option.label}</span>
+                                <span className="text-[12px] font-semibold text-gray-700 leading-tight mt-0.5">₹{option.price} per seat</span>
                               </div>
                             </div>
-                            {bookingData.duration === option.value && (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center"
-                              >
-                                <CheckCircle className="w-4 h-4 text-white" />
-                              </motion.div>
-                            )}
                           </div>
                         </motion.div>
                       ))}
@@ -644,11 +666,11 @@ const Booking = () => {
                   <div>
                     <h3 className="text-lg font-semibold mb-4 flex items-center">
                       <MapPin className="w-5 h-5 mr-2 text-primary-600" />
-                      {durationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'owner' 
+                      {dynamicDurationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'owner' 
                         ? 'Seat Allocation Information' 
                         : 'Select Your Seat(s)'}
                     </h3>
-                    {durationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'owner' ? (
+                    {dynamicDurationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'owner' ? (
                       // Owner allocation message for 4-hour bookings
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -681,148 +703,219 @@ const Booking = () => {
                       </motion.div>
                     ) : (
                       // User seat selection for full-time bookings
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-                        {/* Left Column - Seats 1-11 */}
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-3 text-center bg-gray-100 py-2 rounded-lg">
-                            Column 1 - Seats 1-11
-                          </h4>
-                        <div className="grid grid-cols-1 gap-3">
-                          {Array.from({ length: 11 }, (_, i) => {
-                            const seatId = i + 1
-                            // const status = getSeatStatus(seatId) // Remove status for fulltime disable logic
-                            return (
-                              <motion.button
-                                key={seatId}
-                                onClick={() => handleSeatClick(seatId)}
-                                disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
-                                onHoverStart={() => setHoveredSeat(seatId)}
-                                onHoverEnd={() => setHoveredSeat(null)}
-                                whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.02, y: -2 } : {}}
-                                whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.98 } : {}}
-                                className={`seat w-full h-14 relative rounded-lg transition-all duration-200 ${
-                                  selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg' : ''
-                                } ${
-                                  isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between px-4">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="font-medium">Seat {seatId}</span>
-                                    {isFullTimeSeatBookedNextThreeDays(seatId) && (
-                                      <div className="flex items-center space-x-1">
-                                        <X className="w-4 h-4 text-red-500" />
-                                        <span className="text-xs text-red-600 font-medium">BOOKED</span>
-                                        {getSeatExpiryDate(seatId) && (
-                                          <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded ml-2">
-                                            Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    {selectedSeats.includes(seatId) && (
-                                      <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center"
-                                      >
-                                        <CheckCircle className="w-4 h-4 text-white" />
-                                      </motion.div>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* Hover tooltip */}
-                                {hoveredSeat === seatId && (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10"
-                                  >
-                                    {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
-                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                                  </motion.div>
-                                )}
-                              </motion.button>
-                            )
-                          })}
+                      <>
+                        {/* Column labels for desktop */}
+                        <div className="hidden md:flex w-full mb-2">
+                          <div className="flex-1 text-center font-semibold text-gray-700">Column 1</div>
+                          <div className="flex-1 text-center font-semibold text-gray-700">Column 2</div>
                         </div>
-                      </div>
-                      
-                      {/* Right Column - Seats 12-22 */}
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-3 text-center bg-gray-100 py-2 rounded-lg">
-                          Column 2 - Seats 12-22
-                        </h4>
-                        <div className="grid grid-cols-1 gap-3">
-                          {Array.from({ length: 11 }, (_, i) => {
-                            const seatId = i + 12
-                            // const status = getSeatStatus(seatId) // Remove status for fulltime disable logic
-                            return (
-                              <motion.button
-                                key={seatId}
-                                onClick={() => handleSeatClick(seatId)}
-                                disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
-                                onHoverStart={() => setHoveredSeat(seatId)}
-                                onHoverEnd={() => setHoveredSeat(null)}
-                                whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.02, y: -2 } : {}}
-                                whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.98 } : {}}
-                                className={`seat w-full h-14 relative rounded-lg transition-all duration-200 ${
-                                  selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg' : ''
-                                } ${
-                                  isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between px-4">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="font-medium">Seat {seatId}</span>
-                                    {isFullTimeSeatBookedNextThreeDays(seatId) && (
-                                      <div className="flex items-center space-x-1">
-                                        <X className="w-4 h-4 text-red-500" />
-                                        <span className="text-xs text-red-600 font-medium">BOOKED</span>
-                                        {getSeatExpiryDate(seatId) && (
-                                          <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded ml-2">
-                                            Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    {selectedSeats.includes(seatId) && (
-                                      <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center"
-                                      >
-                                        <CheckCircle className="w-4 h-4 text-white" />
-                                      </motion.div>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* Hover tooltip */}
-                                {hoveredSeat === seatId && (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10"
-                                  >
-                                    {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
-                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                                  </motion.div>
-                                )}
-                              </motion.button>
-                            )
-                          })}
+                        {/* Responsive seat grid: two columns with labels on desktop, two columns on mobile */}
+                        <div className="mb-6" id="seat-grid">
+                          {/* Desktop: one column label only */}
+                          <div className="hidden md:flex w-full gap-2">
+                            <div className="flex-1">
+                              <div className="grid grid-cols-1 gap-2">
+                                {Array.from({ length: 11 }, (_, i) => {
+                                  const seatId = i + 1;
+                                  return (
+                                    <motion.button
+                                      key={seatId}
+                                      onClick={() => handleSeatClick(seatId)}
+                                      disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
+                                      onHoverStart={() => setHoveredSeat(seatId)}
+                                      onHoverEnd={() => setHoveredSeat(null)}
+                                      whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.05 } : {}}
+                                      whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.97 } : {}}
+                                      className={`relative w-full aspect-[1/3] max-h-[40px] flex flex-col items-center justify-center rounded-lg transition-all duration-200 border-2 shadow-sm
+                                        ${selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300 bg-white'}
+                                        ${isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'}
+                                        text-[9px] p-0.5`
+                                      }
+                                    >
+                                      {selectedSeats.includes(seatId) && (
+                                        <span className="absolute top-1 right-1 z-10">
+                                          <CheckCircle className="w-3 h-3 text-primary-500 drop-shadow" />
+                                        </span>
+                                      )}
+                                      <span className="font-extrabold text-[15px]">Seat {seatId}</span>
+                                      {isFullTimeSeatBookedNextThreeDays(seatId) && (
+                                        <span className="text-[7px] text-red-600 font-medium mt-0.5 flex items-center gap-1">
+                                          <X className="w-2 h-2 inline" /> BOOKED
+                                          {getSeatExpiryDate(seatId) && (
+                                            <span className="text-[7px] text-red-600 bg-red-100 px-1 py-0.5 rounded ml-1">
+                                              Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
+                                            </span>
+                                          )}
+                                        </span>
+                                      )}
+                                      {selectedSeats.includes(seatId) && (
+                                        <motion.div
+                                          initial={{ scale: 0 }}
+                                          animate={{ scale: 1 }}
+                                          className="w-2 h-2 bg-primary-600 rounded-full flex items-center justify-center mt-0.5"
+                                        >
+                                          <CheckCircle className="w-1.5 h-1.5 text-white" />
+                                        </motion.div>
+                                      )}
+                                      {/* Hover tooltip */}
+                                      {hoveredSeat === seatId && (
+                                        <motion.div
+                                          initial={{ opacity: 0, y: 10 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[7px] px-1 py-0.5 rounded whitespace-nowrap z-10 shadow-lg"
+                                        >
+                                          {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
+                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
+                                        </motion.div>
+                                      )}
+                                    </motion.button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="grid grid-cols-1 gap-2">
+                                {Array.from({ length: 11 }, (_, i) => {
+                                  const seatId = i + 12;
+                                  return (
+                                    <motion.button
+                                      key={seatId}
+                                      onClick={() => handleSeatClick(seatId)}
+                                      disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
+                                      onHoverStart={() => setHoveredSeat(seatId)}
+                                      onHoverEnd={() => setHoveredSeat(null)}
+                                      whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.05 } : {}}
+                                      whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.97 } : {}}
+                                      className={`relative w-full aspect-[1/3] max-h-[40px] flex flex-col items-center justify-center rounded-lg transition-all duration-200 border-2 shadow-sm
+                                        ${selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300 bg-white'}
+                                        ${isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'}
+                                        text-[9px] p-0.5`
+                                      }
+                                    >
+                                      {selectedSeats.includes(seatId) && (
+                                        <span className="absolute top-1 right-1 z-10">
+                                          <CheckCircle className="w-3 h-3 text-primary-500 drop-shadow" />
+                                        </span>
+                                      )}
+                                      <span className="font-extrabold text-[15px]">Seat {seatId}</span>
+                                      {isFullTimeSeatBookedNextThreeDays(seatId) && (
+                                        <span className="text-[7px] text-red-600 font-medium mt-0.5 flex items-center gap-1">
+                                          <X className="w-2 h-2 inline" /> BOOKED
+                                          {getSeatExpiryDate(seatId) && (
+                                            <span className="text-[7px] text-red-600 bg-red-100 px-1 py-0.5 rounded ml-1">
+                                              Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
+                                            </span>
+                                          )}
+                                        </span>
+                                      )}
+                                      {selectedSeats.includes(seatId) && (
+                                        <motion.div
+                                          initial={{ scale: 0 }}
+                                          animate={{ scale: 1 }}
+                                          className="w-2 h-2 bg-primary-600 rounded-full flex items-center justify-center mt-0.5"
+                                        >
+                                          <CheckCircle className="w-1.5 h-1.5 text-white" />
+                                        </motion.div>
+                                      )}
+                                      {/* Hover tooltip */}
+                                      {hoveredSeat === seatId && (
+                                        <motion.div
+                                          initial={{ opacity: 0, y: 10 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[7px] px-1 py-0.5 rounded whitespace-nowrap z-10 shadow-lg"
+                                        >
+                                          {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
+                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
+                                        </motion.div>
+                                      )}
+                                    </motion.button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                          {/* Mobile: two columns, ultra-short seat boxes */}
+                          <div className="md:hidden grid grid-cols-2 gap-2">
+                            {Array.from({ length: 22 }, (_, i) => {
+                              const seatId = i + 1;
+                              return (
+                                <motion.button
+                                  key={seatId}
+                                  onClick={() => handleSeatClick(seatId)}
+                                  disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
+                                  onHoverStart={() => setHoveredSeat(seatId)}
+                                  onHoverEnd={() => setHoveredSeat(null)}
+                                  whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.05 } : {}}
+                                  whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.97 } : {}}
+                                  className={`relative w-full aspect-[1/3] max-h-[32px] flex flex-col items-center justify-center rounded-lg transition-all duration-200 border-2 shadow-sm
+                                    ${selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300 bg-white'}
+                                    ${isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'}
+                                    text-[8px] p-0.5`
+                                  }
+                                >
+                                  {selectedSeats.includes(seatId) && (
+                                    <span className="absolute top-1 right-1 z-10">
+                                      <CheckCircle className="w-3 h-3 text-primary-500 drop-shadow" />
+                                    </span>
+                                  )}
+                                  <span className="font-extrabold text-[15px]">Seat {seatId}</span>
+                                  {isFullTimeSeatBookedNextThreeDays(seatId) && (
+                                    <span className="text-[7px] text-red-600 font-medium mt-0.5 flex items-center gap-1">
+                                      <X className="w-1.5 h-1.5 inline" /> BOOKED
+                                      {getSeatExpiryDate(seatId) && (
+                                        <span className="text-[7px] text-red-600 bg-red-100 px-1 py-0.5 rounded ml-1">
+                                          Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
+                                        </span>
+                                      )}
+                                    </span>
+                                  )}
+                                  {selectedSeats.includes(seatId) && (
+                                    <motion.div
+                                      initial={{ scale: 0 }}
+                                      animate={{ scale: 1 }}
+                                      className="w-1.5 h-1.5 bg-primary-600 rounded-full flex items-center justify-center mt-0.5"
+                                    >
+                                      <CheckCircle className="w-1 h-1 text-white" />
+                                    </motion.div>
+                                  )}
+                                  {/* Hover tooltip */}
+                                  {hoveredSeat === seatId && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[7px] px-1 py-0.5 rounded whitespace-nowrap z-10 shadow-lg"
+                                    >
+                                      {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
+                                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
+                                    </motion.div>
+                                  )}
+                                </motion.button>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                        {/* 2. Sticky bar for selected seat (mobile only) */}
+                        {selectedSeats.length > 0 && (
+                          <div className="fixed bottom-0 left-0 right-0 z-40 bg-primary-700 text-white flex items-center justify-between px-4 py-3 sm:hidden shadow-lg border-t border-primary-800">
+                            <div className="flex items-center gap-2">
+                              <Users className="w-5 h-5" />
+                              <span className="font-semibold">Selected Seat: {selectedSeats[0]}</span>
+                            </div>
+                            <button
+                              className="bg-white text-primary-700 font-bold px-4 py-2 rounded-lg shadow hover:bg-primary-100 transition-all text-sm"
+                              onClick={() => {
+                                const el = document.getElementById('seat-grid');
+                                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              }}
+                            >
+                              Go to Seats
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                     
-                    {durationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'user' && (
+                    {dynamicDurationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'user' && (
                       <>
                         {/* Selected Seat Indicator */}
                         {selectedSeats.length > 0 && (
@@ -878,25 +971,21 @@ const Booking = () => {
                   </h2>
                   
                   {/* Add a single compact blue info note (Booking Policy) above the form fields */}
-                  <div className="flex items-start bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs text-blue-900 mb-4">
-                    <svg className="w-4 h-4 mr-2 flex-shrink-0 text-blue-500 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                    <div>
-                      <span className="font-semibold">Booking Policy:</span> <br/>
-                      You can only book for <span className="font-medium text-blue-700">today, tomorrow, or the day after tomorrow</span>.<br/>
-                      This prevents advance blocking and keeps seat availability fair for everyone.<br/>
-                      <span className="font-medium text-blue-700">1 Month</span> is best for regulars, <span className="font-medium text-blue-700">15 Days</span> is great for short-term needs.<br/>
-                      Choose the option that fits your study plans!
+                  {currentStep === 2 && (
+                    <div className="mb-4 p-2 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-xs rounded">
+                      Note: Please fill in all required details (Name, Email, Phone) to proceed with payment.
                     </div>
-                  </div>
+                  )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* All form fields here, each with w-full and py-2 */}
                     <motion.div
                       whileHover={{ scale: 1.02 }}
                       transition={{ duration: 0.2 }}
                     >
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         <User className="w-4 h-4 inline mr-2" />
-                        Full Name *
+                        Full Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -914,7 +1003,7 @@ const Booking = () => {
                     >
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         <Mail className="w-4 h-4 inline mr-2" />
-                        Email Address 
+                        Email Address <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="email"
@@ -932,7 +1021,7 @@ const Booking = () => {
                     >
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         <Phone className="w-4 h-4 inline mr-2" />
-                        Phone Number *
+                        Phone Number <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="tel"
@@ -970,14 +1059,14 @@ const Booking = () => {
             </div>
 
             {/* Sidebar */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 order-2 sm:order-1 mt-6 sm:mt-0">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="card sticky top-24 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200"
+                className="card sticky top-24 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 w-full min-h-[220px] sm:max-w-[220px] mx-0 sm:mx-auto p-2 sm:p-4 rounded-xl text-xs sm:text-sm"
               >
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <DollarSign className="w-5 h-5 mr-2 text-primary-600" />
+                <h3 className="text-base font-semibold mb-3 flex items-center">
+                  <DollarSign className="w-4 h-4 mr-2 text-primary-600" />
                   Booking Summary
                 </h3>
                 
@@ -987,41 +1076,43 @@ const Booking = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-4"
                   >
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600 flex items-center">
-                        <Calendar className="w-4 h-4 mr-2" />
+                    <div className="flex flex-col items-center p-1 bg-white rounded mb-1 sm:mb-2">
+                      <span className="text-[10px] sm:text-xs text-gray-600 flex items-center mb-0.5 sm:mb-1">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-primary-600" />
                         Date:
                       </span>
-                      <span className="font-medium">
+                      <span className="text-xs sm:text-sm font-bold text-center bg-gray-100 rounded px-1.5 py-0.5 w-full">
                         {selectedDate ? format(selectedDate, 'MMM dd, yyyy') : 'Not selected'}
                       </span>
                     </div>
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-start space-x-2 mb-2">
-                        <Timer className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-600">Duration:</span>
+                    <div className="p-2 sm:p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-start space-x-1 sm:space-x-2 mb-1 sm:mb-2">
+                        <Timer className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-600 text-xs sm:text-sm">Duration:</span>
                       </div>
-                      <span className="font-medium text-sm leading-tight block">
-                        {durationOptions.find(d => d.value === bookingData.duration)?.label || 'Not selected'}
+                      <span className="font-medium text-xs sm:text-sm leading-tight block">
+                        {dynamicDurationOptions.find(d => d.value === bookingData.duration)?.label || 'Not selected'}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600 flex items-center">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        {durationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'owner' ? 'Seat Allocation:' : 'Seats:'}
+                    <div className="flex justify-between items-center p-2 sm:p-3 bg-gray-50 rounded-lg">
+                      <span className="text-gray-600 flex items-center text-xs sm:text-sm">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                        Seats:
                       </span>
-                      <span className="font-medium">
-                        {durationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'owner' 
-                          ? 'By Owner' 
-                          : (selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None selected')}
-                      </span>
+                      <span className="font-medium text-xs sm:text-sm">{selectedSeats.join(', ')}</span>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600 flex items-center">
-                        <Users className="w-4 h-4 mr-2" />
-                        Total Seats:
+                    <div className="flex justify-between items-center p-2 sm:p-3 bg-gray-50 rounded-lg">
+                      <span className="text-gray-600 flex items-center text-xs sm:text-sm">
+                        <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                        Price per seat:
                       </span>
-                      <span className="font-medium">{selectedSeats.length}</span>
+                      <span className="font-medium text-xs sm:text-sm">₹{dynamicDurationOptions.find(d => d.value === bookingData.duration)?.price}</span>
+                    </div>
+                    <div className="border-t-2 border-gray-200 pt-2 sm:pt-4">
+                      <div className="flex justify-between text-base sm:text-lg font-semibold">
+                        <span>Total:</span>
+                        <span className="text-primary-600">₹{calculateTotal()}</span>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -1032,19 +1123,21 @@ const Booking = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-4"
                   >
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600 flex items-center">
-                        <Calendar className="w-4 h-4 mr-2" />
+                    <div className="flex flex-col items-center p-1 bg-white rounded mb-2">
+                      <span className="text-xs text-gray-600 flex items-center mb-1">
+                        <Calendar className="w-4 h-4 mr-1 text-primary-600" />
                         Date:
                       </span>
-                      <span className="font-medium">{format(selectedDate, 'MMM dd, yyyy')}</span>
+                      <span className="text-sm font-bold text-center bg-gray-100 rounded px-2 py-1 w-full">
+                        {selectedDate ? format(selectedDate, 'MMM dd, yyyy') : 'Not selected'}
+                      </span>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-start space-x-2 mb-2">
                         <Timer className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                         <span className="text-gray-600">Duration:</span>
                       </div>
-                      <span className="font-medium text-sm leading-tight block">{durationOptions.find(d => d.value === bookingData.duration)?.label}</span>
+                      <span className="font-medium text-sm leading-tight block">{dynamicDurationOptions.find(d => d.value === bookingData.duration)?.label}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-gray-600 flex items-center">
@@ -1058,7 +1151,7 @@ const Booking = () => {
                         <DollarSign className="w-4 h-4 mr-2" />
                         Price per seat:
                       </span>
-                      <span className="font-medium">₹{durationOptions.find(d => d.value === bookingData.duration)?.price}</span>
+                      <span className="font-medium">₹{dynamicDurationOptions.find(d => d.value === bookingData.duration)?.price}</span>
                     </div>
                     <div className="border-t-2 border-gray-200 pt-4">
                       <div className="flex justify-between text-lg font-semibold">
@@ -1072,7 +1165,7 @@ const Booking = () => {
                 <div className="mt-6 space-y-3">
                   {currentStep > 1 && (
                     <motion.button
-                      onClick={() => setCurrentStep(currentStep - 1)}
+                      onClick={() => { setCurrentStep(currentStep - 1); scrollToBookingForm(); }}
                       className="w-full btn-secondary flex items-center justify-center space-x-2"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -1104,8 +1197,8 @@ const Booking = () => {
                   )}
                   {currentStep === 2 && (
                     <motion.button
-                      onClick={handlePayment}
-                      disabled={isLoading || (durationOptions.find(d => d.value === bookingData.duration)?.seatAllocation === 'user' && selectedSeats.length === 0)}
+                      onClick={async () => { await handlePayment(); scrollToBookingForm(); }}
+                      disabled={!bookingData.name || !bookingData.email || !bookingData.phone || isLoading}
                       className="w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -1126,12 +1219,12 @@ const Booking = () => {
                 </div>
 
                 {/* Features Showcase */}
-                <div className="mt-6">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                <div className="mt-10">
+                  <h4 className="font-medium text-gray-900 mb-5 flex items-center">
                     <Star className="w-4 h-4 mr-2 text-yellow-500" />
                     Why Choose Us?
                   </h4>
-                  <div className="relative h-24 overflow-hidden rounded-lg">
+                  <div className="relative h-auto min-h-[140px] overflow-hidden rounded-lg p-8">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={currentFeature}
@@ -1139,31 +1232,25 @@ const Booking = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -30 }}
                         transition={{ duration: 0.5 }}
-                        className={`absolute inset-0 bg-gradient-to-br ${features[currentFeature].color} text-white p-4 flex items-center`}
+                        className={`absolute inset-0 bg-gradient-to-br ${features[currentFeature].color} text-white flex flex-col items-center justify-center p-8 text-center`}
                       >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                        <div className="flex flex-col items-center space-y-3 w-full">
+                          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mx-auto">
                             {features[currentFeature].icon}
                           </div>
-                          <div>
-                            <h5 className="font-semibold text-sm">
-                              {features[currentFeature].title}
-                            </h5>
-                            <p className="text-white/90 text-xs">
-                              {features[currentFeature].description}
-                            </p>
-                          </div>
+                          <h5 className="font-semibold text-xs mb-0 mt-1">{features[currentFeature].title}</h5>
+                          <p className="text-white/90 text-[11px] max-w-xs mx-auto mt-1">{features[currentFeature].description}</p>
                         </div>
                       </motion.div>
                     </AnimatePresence>
                     
                     {/* Feature indicators */}
-                    <div className="absolute bottom-2 right-2 flex space-x-1">
+                    <div className="absolute bottom-3 right-3 flex space-x-2">
                       {features.map((_, idx) => (
                         <button
                           key={idx}
                           onClick={() => setCurrentFeature(idx)}
-                          className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                          className={`w-2 h-2 rounded-full transition-colors ${
                             idx === currentFeature ? 'bg-white' : 'bg-white/30'
                           }`}
                         />
@@ -1172,18 +1259,20 @@ const Booking = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                {/* After the Why Choose Us? section in the sidebar, restore the original Booking Policy section */}
+                {/* Remove the Booking Policy collapsible section from the sidebar */}
+                <details className="mt-6 bg-blue-50 rounded-lg">
+                  <summary className="font-medium text-blue-900 mb-2 flex items-center cursor-pointer p-4 select-none">
                     <Info className="w-4 h-4 mr-2" />
                     Booking Policy
-                  </h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
+                  </summary>
+                  <ul className="text-sm text-blue-800 space-y-1 px-4 pb-4">
                     <li>• 4 Hours (Morning/Evening): ₹400 per seat</li>
                     <li>• Full Time: ₹600 per seat</li>
                     <li>• Payment required at booking</li>
                     <li>• We only allow booking for today, tomorrow, or the day after tomorrow to prevent advance blocking and ensure fair seat availability for all students.</li>
                   </ul>
-                </div>
+                </details>
               </motion.div>
             </div>
           </div>
@@ -1192,11 +1281,11 @@ const Booking = () => {
       {/* Policy Links Bar */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 border-t border-gray-200 pt-6">
-          <a href="/terms" className="hover:text-primary-600 underline">Terms & Conditions</a>
+          <Link to="/terms" className="hover:text-primary-600 underline">Terms & Conditions</Link>
           <span>|</span>
-          <a href="/refund-policy" className="hover:text-primary-600 underline">Refund Policy</a>
+          <Link to="/refund-policy" className="hover:text-primary-600 underline">Refund Policy</Link>
           <span>|</span>
-          <a href="/contact-us" className="hover:text-primary-600 underline">Contact Us</a>
+          <Link to="/contact" className="hover:text-primary-600 underline">Contact</Link>
         </div>
       </div>
     </div>

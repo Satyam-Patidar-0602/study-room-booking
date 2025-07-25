@@ -535,7 +535,8 @@ const StudentResources = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-4 sm:mb-8"
         >
-          <div className="flex flex-wrap gap-2 justify-center">
+          {/* Tabs: make horizontally scrollable and reduce padding/font size on mobile */}
+          <div className="flex flex-nowrap overflow-x-auto gap-2 justify-start sm:justify-center pb-2 sm:pb-0">
             {[
               { id: 'mocktest', name: 'Mock Test', icon: <Award className="w-4 h-4" /> },
               { id: 'materials', name: 'Study Materials', icon: <BookOpen className="w-4 h-4" /> },
@@ -549,11 +550,12 @@ const StudentResources = () => {
                   setShowResults(false)
                   setUserAnswers({})
                 }}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                className={`flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 min-w-[120px] ${
                   activeTab === tab.id
                     ? 'bg-primary-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-100 shadow-md'
                 }`}
+                style={{ flex: '0 0 auto' }}
               >
                 {tab.icon}
                 <span>{tab.name}</span>
@@ -608,6 +610,7 @@ const StudentResources = () => {
                       <div className="font-medium mb-2">
                         Q{idx + 1}. {q.q}
                       </div>
+                      {/* Quiz options: use single column on mobile, two columns on md+ */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {q.options.map((opt, oidx) => (
                           <label key={oidx} className={`flex items-center p-2 rounded-lg border cursor-pointer transition-colors ${userAnswers[idx] === oidx ? 'bg-primary-100 border-primary-600' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}>
@@ -697,26 +700,30 @@ const StudentResources = () => {
                   />
                 </div>
                 <div className="flex gap-2">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`flex items-center space-x-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        selectedCategory === category.id
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {category.icon}
-                      <span>{category.name}</span>
-                    </button>
-                  ))}
+                  {/* In the study materials filter, make the category buttons horizontally scrollable on mobile */}
+                  <div className="flex flex-nowrap overflow-x-auto gap-2 sm:gap-3 pb-2 sm:pb-0 -mx-2 px-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`flex items-center space-x-2 px-4 py-2 sm:px-4 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                          selectedCategory === category.id
+                            ? 'bg-primary-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                        style={{ flex: '0 0 auto' }}
+                      >
+                        {category.icon}
+                        <span>{category.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Materials Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {filteredMaterials.map((material) => (
                 <motion.div
                   key={material.id}
@@ -725,30 +732,27 @@ const StudentResources = () => {
                   transition={{ duration: 0.6 }}
                   className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="p-4 sm:p-6">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
                       <div className="text-primary-600">
                         {material.icon}
                       </div>
                       <div className="flex items-center space-x-1 text-yellow-400">
                         <Star className="w-4 h-4 fill-current" />
-                        <span className="text-sm text-gray-600">{material.rating}</span>
+                        <span className="text-xs sm:text-sm text-gray-600">{material.rating}</span>
                       </div>
                     </div>
-                    
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2">
                       {material.title}
                     </h3>
-                    
-                    <p className="text-gray-600 text-sm mb-4">
+                    <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-4">
                       {material.description}
                     </p>
-                    
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <span className="text-xs text-gray-500">
                         {material.downloads} downloads
                       </span>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-1 sm:space-x-2">
                         <button className="p-2 text-gray-400 hover:text-primary-600 transition-colors">
                           <Bookmark className="w-4 h-4" />
                         </button>
@@ -774,10 +778,10 @@ const StudentResources = () => {
                               document.body.removeChild(link)
                             }
                           }}
-                          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
+                          className="px-3 py-2 sm:px-4 sm:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-xs sm:text-sm"
                         >
                           <Download className="w-4 h-4 inline mr-1" />
-                          Download PDF
+                          Download
                         </button>
                       </div>
                     </div>
@@ -837,7 +841,7 @@ const StudentResources = () => {
               {/* Add New Goal */}
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-semibold mb-3">Add New Study Goal</h3>
-                <div className="flex gap-4">
+                <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                   <input
                     type="text"
                     placeholder="Subject name"
@@ -848,7 +852,7 @@ const StudentResources = () => {
                     type="number"
                     placeholder="Target minutes"
                     id="newTarget"
-                    className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full md:w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                   <button
                     onClick={() => {
@@ -867,7 +871,7 @@ const StudentResources = () => {
                         document.getElementById('newTarget').value = ''
                       }
                     }}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    className="w-full md:w-auto px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                   >
                     Add Goal
                   </button>

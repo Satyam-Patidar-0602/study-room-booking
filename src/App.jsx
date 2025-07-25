@@ -14,11 +14,13 @@ import RefundPolicy from './pages/RefundPolicy';
 import ContactUs from './pages/ContactUs';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <ScrollToTop />
       <main className="flex-1">
         <AnimatePresence mode="wait">
           <Routes>
