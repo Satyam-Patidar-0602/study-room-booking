@@ -483,6 +483,8 @@ const Booking = () => {
     return booking?.expiry_date || null
   }
 
+  const isDesktop = window.innerWidth >= 768; // For mobile screens
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 1. Compact hero section */}
@@ -835,68 +837,128 @@ const Booking = () => {
                             </div>
                           </div>
                           {/* Mobile: two columns, ultra-short seat boxes */}
-                          <div className="md:hidden grid grid-cols-2 gap-2">
-                            {/* Mobile: add column labels above the seat grid */}
-                            <div className="md:hidden grid grid-cols-2 mb-1">
-                              <div className="text-center font-semibold text-gray-700 text-xs">Column 1 (1-11)</div>
-                              <div className="text-center font-semibold text-gray-700 text-xs">Column 2 (12-22)</div>
+                          {/* Mobile: add column labels above the seat grid */}
+                          <div className='md:hidden grid grid-cols-2 mb-1'>
+                            <div className='text-center font-semibold text-gray-700 text-xs'>Column 1 (1-11)</div>
+                            <div className='text-center font-semibold text-gray-700 text-xs'>Column 2 (12-22)</div>
+                          </div>
+                          <div className='md:hidden grid grid-cols-2 gap-2'>
+                            <div className='flex flex-col gap-2'>
+                              {Array.from({ length: 11 }, (_, i) => {
+                                const seatId = i + 1;
+                                return (
+                                  <motion.button
+                                    key={seatId}
+                                    onClick={() => handleSeatClick(seatId)}
+                                    disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
+                                    onHoverStart={() => setHoveredSeat(seatId)}
+                                    onHoverEnd={() => setHoveredSeat(null)}
+                                    whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.05 } : {}}
+                                    whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.97 } : {}}
+                                    className={`relative w-full aspect-[1/3] max-h-[32px] flex flex-col items-center justify-center rounded-lg transition-all duration-200 border-2 shadow-sm
+                                      ${selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300 bg-white'}
+                                      ${isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'}
+                                      text-[8px] p-0.5`
+                                    }
+                                  >
+                                    {selectedSeats.includes(seatId) && (
+                                      <span className="absolute top-1 right-1 z-10">
+                                        <CheckCircle className="w-3 h-3 text-primary-500 drop-shadow" />
+                                      </span>
+                                    )}
+                                    <span className="font-extrabold text-[15px]">Seat {seatId}</span>
+                                    {isFullTimeSeatBookedNextThreeDays(seatId) && (
+                                      <span className="text-[7px] text-red-600 font-medium mt-0.5 flex items-center gap-1">
+                                        <X className="w-1.5 h-1.5 inline" /> BOOKED
+                                        {getSeatExpiryDate(seatId) && (
+                                          <span className="text-[7px] text-red-600 bg-red-100 px-1 py-0.5 rounded ml-1">
+                                            Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
+                                          </span>
+                                        )}
+                                      </span>
+                                    )}
+                                    {selectedSeats.includes(seatId) && (
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="w-1.5 h-1.5 bg-primary-600 rounded-full flex items-center justify-center mt-0.5"
+                                      >
+                                        <CheckCircle className="w-1 h-1 text-white" />
+                                      </motion.div>
+                                    )}
+                                    {/* Hover tooltip */}
+                                    {hoveredSeat === seatId && (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[7px] px-1 py-0.5 rounded whitespace-nowrap z-10 shadow-lg"
+                                      >
+                                        {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
+                                      </motion.div>
+                                    )}
+                                  </motion.button>
+                                );
+                              })}
                             </div>
-                            {Array.from({ length: 22 }, (_, i) => {
-                              const seatId = i + 1;
-                              return (
-                                <motion.button
-                                  key={seatId}
-                                  onClick={() => handleSeatClick(seatId)}
-                                  disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
-                                  onHoverStart={() => setHoveredSeat(seatId)}
-                                  onHoverEnd={() => setHoveredSeat(null)}
-                                  whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.05 } : {}}
-                                  whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.97 } : {}}
-                                  className={`relative w-full aspect-[1/3] max-h-[32px] flex flex-col items-center justify-center rounded-lg transition-all duration-200 border-2 shadow-sm
-                                    ${selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300 bg-white'}
-                                    ${isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'}
-                                    text-[8px] p-0.5`
-                                  }
-                                >
-                                  {selectedSeats.includes(seatId) && (
-                                    <span className="absolute top-1 right-1 z-10">
-                                      <CheckCircle className="w-3 h-3 text-primary-500 drop-shadow" />
-                                    </span>
-                                  )}
-                                  <span className="font-extrabold text-[15px]">Seat {seatId}</span>
-                                  {isFullTimeSeatBookedNextThreeDays(seatId) && (
-                                    <span className="text-[7px] text-red-600 font-medium mt-0.5 flex items-center gap-1">
-                                      <X className="w-1.5 h-1.5 inline" /> BOOKED
-                                      {getSeatExpiryDate(seatId) && (
-                                        <span className="text-[7px] text-red-600 bg-red-100 px-1 py-0.5 rounded ml-1">
-                                          Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
-                                        </span>
-                                      )}
-                                    </span>
-                                  )}
-                                  {selectedSeats.includes(seatId) && (
-                                    <motion.div
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      className="w-1.5 h-1.5 bg-primary-600 rounded-full flex items-center justify-center mt-0.5"
-                                    >
-                                      <CheckCircle className="w-1 h-1 text-white" />
-                                    </motion.div>
-                                  )}
-                                  {/* Hover tooltip */}
-                                  {hoveredSeat === seatId && (
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[7px] px-1 py-0.5 rounded whitespace-nowrap z-10 shadow-lg"
-                                    >
-                                      {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
-                                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
-                                    </motion.div>
-                                  )}
-                                </motion.button>
-                              );
-                            })}
+                            <div className='flex flex-col gap-2'>
+                              {Array.from({ length: 11 }, (_, i) => {
+                                const seatId = i + 12;
+                                return (
+                                  <motion.button
+                                    key={seatId}
+                                    onClick={() => handleSeatClick(seatId)}
+                                    disabled={isFullTimeSeatBookedNextThreeDays(seatId)}
+                                    onHoverStart={() => setHoveredSeat(seatId)}
+                                    onHoverEnd={() => setHoveredSeat(null)}
+                                    whileHover={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 1.05 } : {}}
+                                    whileTap={!isFullTimeSeatBookedNextThreeDays(seatId) ? { scale: 0.97 } : {}}
+                                    className={`relative w-full aspect-[1/3] max-h-[32px] flex flex-col items-center justify-center rounded-lg transition-all duration-200 border-2 shadow-sm
+                                      ${selectedSeats.includes(seatId) ? 'ring-2 ring-primary-500 ring-offset-2 shadow-lg border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-primary-300 bg-white'}
+                                      ${isFullTimeSeatBookedNextThreeDays(seatId) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:shadow-md'}
+                                      text-[8px] p-0.5`
+                                    }
+                                  >
+                                    {selectedSeats.includes(seatId) && (
+                                      <span className="absolute top-1 right-1 z-10">
+                                        <CheckCircle className="w-3 h-3 text-primary-500 drop-shadow" />
+                                      </span>
+                                    )}
+                                    <span className="font-extrabold text-[15px]">Seat {seatId}</span>
+                                    {isFullTimeSeatBookedNextThreeDays(seatId) && (
+                                      <span className="text-[7px] text-red-600 font-medium mt-0.5 flex items-center gap-1">
+                                        <X className="w-1.5 h-1.5 inline" /> BOOKED
+                                        {getSeatExpiryDate(seatId) && (
+                                          <span className="text-[7px] text-red-600 bg-red-100 px-1 py-0.5 rounded ml-1">
+                                            Until {format(new Date(getSeatExpiryDate(seatId)), 'MMM dd')}
+                                          </span>
+                                        )}
+                                      </span>
+                                    )}
+                                    {selectedSeats.includes(seatId) && (
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="w-1.5 h-1.5 bg-primary-600 rounded-full flex items-center justify-center mt-0.5"
+                                      >
+                                        <CheckCircle className="w-1 h-1 text-white" />
+                                      </motion.div>
+                                    )}
+                                    {/* Hover tooltip */}
+                                    {hoveredSeat === seatId && (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-[7px] px-1 py-0.5 rounded whitespace-nowrap z-10 shadow-lg"
+                                      >
+                                        {isFullTimeSeatBookedNextThreeDays(seatId) ? 'Already Booked' : 'Click to Select'}
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-900"></div>
+                                      </motion.div>
+                                    )}
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
                         {/* 2. Sticky bar for selected seat (mobile only) */}
