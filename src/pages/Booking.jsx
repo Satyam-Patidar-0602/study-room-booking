@@ -836,6 +836,11 @@ const Booking = () => {
                           </div>
                           {/* Mobile: two columns, ultra-short seat boxes */}
                           <div className="md:hidden grid grid-cols-2 gap-2">
+                            {/* Mobile: add column labels above the seat grid */}
+                            <div className="md:hidden grid grid-cols-2 mb-1">
+                              <div className="text-center font-semibold text-gray-700 text-xs">Column 1 (1-11)</div>
+                              <div className="text-center font-semibold text-gray-700 text-xs">Column 2 (12-22)</div>
+                            </div>
                             {Array.from({ length: 22 }, (_, i) => {
                               const seatId = i + 1;
                               return (
