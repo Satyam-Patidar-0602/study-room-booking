@@ -578,32 +578,7 @@ export default function Home() {
       </section>
 
       {/* CTA SECTION */}
-      <section className="py-10 sm:py-20 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
-              Ready to Start Your Study Journey?
-            </h2>
-            <p className="text-base sm:text-lg text-primary-100 mb-4 sm:mb-8 max-w-2xl mx-auto">
-              Join hundreds of students who have found their perfect study environment with us.<br />
-              <span className="text-xs sm:text-sm text-primary-200">Contact: thestudypointlibraryjeeran@gmail.com</span>
-            </p>
-            <Link
-              to="/booking"
-              className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base"
-            >
-              <BookOpen className="w-5 h-5 mr-2" />
-              Book Your Seat Now
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+    
     </div>
   );
-} 
+}  

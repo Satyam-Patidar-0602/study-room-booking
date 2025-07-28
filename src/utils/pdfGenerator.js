@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 export const generatePDF = (title, content, filename) => {
   const doc = new jsPDF()
@@ -45,6 +46,60 @@ export const generatePDF = (title, content, filename) => {
   // Save the PDF
   doc.save(filename + '.pdf')
 }
+
+// New function for generating booking ID card PDFs with proper height calculation
+export const generateBookingIdCardPDF = async (cardElement, filename = 'StudyPoint_IDCard') => {
+  try {
+    // Generate canvas from the card element
+    const canvas = await html2canvas(cardElement, { 
+      backgroundColor: null, 
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    
+    // Create PDF with proper dimensions
+    const pdf = new jsPDF({ 
+      orientation: 'landscape', 
+      unit: 'mm', 
+      format: 'a4' 
+    });
+    
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    
+    // Calculate optimal dimensions to fit the card properly
+    const aspectRatio = canvas.height / canvas.width;
+    const maxWidth = pageWidth - 20; // 10mm margin on each side
+    const maxHeight = pageHeight - 20; // 10mm margin on top and bottom
+    
+    let imgWidth = maxWidth;
+    let imgHeight = imgWidth * aspectRatio;
+    
+    // If height exceeds page height, scale down proportionally
+    if (imgHeight > maxHeight) {
+      imgHeight = maxHeight;
+      imgWidth = imgHeight / aspectRatio;
+    }
+    
+    // Center the image on the page
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+    
+    // Add the image to PDF
+    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+    
+    // Save the PDF
+    pdf.save(filename + '.pdf');
+    
+    return true;
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    return false;
+  }
+};
 
 // Predefined content for different study materials
 export const studyMaterialContent = {

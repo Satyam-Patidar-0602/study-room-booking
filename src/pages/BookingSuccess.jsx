@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import { generateBookingIdCardPDF } from '../utils/pdfGenerator'
 import axios from 'axios';
 import { 
   CheckCircle, 
@@ -18,6 +19,7 @@ import { QRCodeCanvas } from 'qrcode.react'
 import { getUploadUrl, getFallbackUrl, getBaseUrl } from '../config/urls'
 import BookingIdCard from '../components/BookingIdCard'
 import { createRoot } from 'react-dom/client';
+
 
 const BookingSuccess = () => {
   const location = useLocation()
@@ -79,10 +81,25 @@ const BookingSuccess = () => {
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = 120;
-      const imgHeight = (canvas.height / canvas.width) * imgWidth;
+      
+      // Calculate optimal dimensions to fit the card properly
+      const aspectRatio = canvas.height / canvas.width;
+      const maxWidth = pageWidth - 20; // 10mm margin on each side
+      const maxHeight = pageHeight - 20; // 10mm margin on top and bottom
+      
+      let imgWidth = maxWidth;
+      let imgHeight = imgWidth * aspectRatio;
+      
+      // If height exceeds page height, scale down proportionally
+      if (imgHeight > maxHeight) {
+        imgHeight = maxHeight;
+        imgWidth = imgHeight / aspectRatio;
+      }
+      
+      // Center the image on the page
       const x = (pageWidth - imgWidth) / 2;
       const y = (pageHeight - imgHeight) / 2;
+      
       pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       
       // Convert PDF to Blob
@@ -124,32 +141,25 @@ const BookingSuccess = () => {
   }, [bookingDetails]);
 
   // 2. In handleDownloadIDCard, just download the PDF (no upload logic)
-  const handleDownloadIDCard = async () => {
-    if (!hiddenCardRef.current || !pdfUrl) return;
-    // Render the BookingIdCard with the correct qrValue for download
-    const downloadContainer = document.createElement('div');
-    downloadContainer.style.position = 'fixed';
-    downloadContainer.style.left = '-9999px';
-    downloadContainer.style.top = '0';
-    document.body.appendChild(downloadContainer);
-    const root = createRoot(downloadContainer);
-    root.render(<BookingIdCard bookingDetails={{ ...bookingDetails, qrValue: pdfUrl }} />);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const cardNode = downloadContainer.firstChild;
-    const canvas = await html2canvas(cardNode, { backgroundColor: null, scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = 120;
-    const imgHeight = (canvas.height / canvas.width) * imgWidth;
-    const x = (pageWidth - imgWidth) / 2;
-    const y = (pageHeight - imgHeight) / 2;
-    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-    pdf.save('StudyPoint_IDCard.pdf');
-    root.unmount();
-    document.body.removeChild(downloadContainer);
+  const handleDownloadIDCard = () => {
+    const input = document.getElementById("booking-id-card");
+    if (!input) return;
+  
+    html2canvas(input).then(canvas => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF();
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+  
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("booking-id-card.pdf");
+  
+      // ✅ Remove leftover canvas that blocks clicks
+      canvas.remove();
+    });
   };
+  
 
   // When navigating from Booking.jsx, save bookingDetails to localStorage
   useEffect(() => {
@@ -211,8 +221,8 @@ const BookingSuccess = () => {
     : 'N/A';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-2 sm:px-4 md:px-8 py-8 sm:py-16">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="flex-1 max-w-2xl mx-auto px-2 sm:px-4 md:px-8 py-8 sm:py-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -227,7 +237,7 @@ const BookingSuccess = () => {
           </p>
         </motion.div>
         {/* Hidden card for PDF generation only */}
-        <div style={{ position: 'fixed', left: '-9999px', top: 0, width: 480 }}>
+        <div style={{ position: 'absolute', left: '-9999px', top: 0, width: 480, zIndex: -1 }}>
           <div ref={hiddenCardRef}>
             <BookingIdCard bookingDetails={{ ...bookingDetails, qrValue }} />
           </div>
@@ -240,14 +250,7 @@ const BookingSuccess = () => {
           transition={{ delay: 0.3 }}
           className="mx-auto mb-8 w-full max-w-[350px] sm:max-w-[400px] md:max-w-[480px] overflow-hidden rounded-xl shadow-lg bg-white"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-purple-400/10 to-pink-400/20 pointer-events-none"></div>
-          <div className="absolute inset-0 opacity-5">
-            <div className="grid grid-cols-20 gap-1">
-              {Array.from({ length: 400 }).map((_, i) => (
-                <div key={i} className="w-1 h-1 bg-blue-500 rounded-full"></div>
-              ))}
-            </div>
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-purple-400/10 to-pink-400/20 "></div>
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 relative">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -342,11 +345,27 @@ const BookingSuccess = () => {
             </div>
           </div>
         </motion.div>
-        {/* Action buttons: ensure type='button' and use Link for navigation */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/" className="btn-secondary text-center" type="button">Go to Home</Link>
-          <Link to="/booking" className="btn-primary text-center" type="button">Book Another Seat</Link>
-        </div>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center z-10 relative">
+  <Link to="/" className="btn-secondary text-center" role="button">
+    Go to Home
+  </Link>
+  
+  <Link to="/booking" className="btn-primary text-center" role="button">
+    Book Another Seat
+  </Link>
+  
+  <button
+    type="button"
+    onClick={handleDownloadIDCard}
+    className="btn-success text-center z-10 relative"
+    style={{ pointerEvents: 'auto' }} // 🔧 Ensure clickability
+  >
+    <Download className="w-4 h-4 mr-2 inline" />
+    Download ID Card
+  </button>
+</div>
+
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
