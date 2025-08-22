@@ -76,7 +76,7 @@ const Booking = () => {
           <span>Morning/Evening</span>
         </>
       ),
-      price: 400,
+      price: 300,
       icon: <Clock className="w-5 h-5" />,
       color: 'from-blue-500 to-blue-600',
       seatAllocation: 'owner'
@@ -1334,7 +1334,7 @@ const Booking = () => {
                     Booking Policy
                   </summary>
                   <ul className="text-sm text-blue-800 space-y-1 px-4 pb-4">
-                    <li>• 4 Hours (Morning/Evening): ₹400 per seat</li>
+                    <li>• 4 Hours (Morning/Evening): ₹300 per seat</li>
                     <li>• Full Time: ₹600 per seat</li>
                     <li>• Payment required at booking</li>
                     <li>• We only allow booking for today, tomorrow, or the day after tomorrow to prevent advance blocking and ensure fair seat availability for all students.</li>

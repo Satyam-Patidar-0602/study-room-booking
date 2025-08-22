@@ -428,15 +428,37 @@ router.get('/seats', async (req, res) => {
         s.is_active,
         s.created_at,
         CASE 
-          WHEN b_4h.id IS NOT NULL AND b_4h.status = 'active' THEN 'booked_4h'
-          WHEN b_ft.id IS NOT NULL AND b_ft.status = 'active' THEN 'booked_ft'
+          WHEN b_4h.id IS NOT NULL THEN 'booked_4h'
+          WHEN b_ft.id IS NOT NULL THEN 'booked_ft'
           ELSE 'available'
         END as status,
         b_4h.duration_type as booking_4h_type,
         b_ft.duration_type as booking_ft_type
       FROM seats s
-      LEFT JOIN bookings b_4h ON s.id = b_4h.seat_id AND b_4h.status = 'active' AND b_4h.duration_type = '4hours'
-      LEFT JOIN bookings b_ft ON s.id = b_ft.seat_id AND b_ft.status = 'active' AND b_ft.duration_type = 'fulltime'
+      LEFT JOIN bookings b_4h 
+        ON s.id = b_4h.seat_id 
+        AND b_4h.status = 'active' 
+        AND b_4h.duration_type = '4hours'
+        AND b_4h.start_date::date <= CURRENT_DATE
+        AND (
+          CASE 
+            WHEN b_4h.subscription_period = '0.5' THEN (b_4h.start_date::date + INTERVAL '14 days')
+            WHEN b_4h.subscription_period = '1' THEN (b_4h.start_date::date + INTERVAL '1 month' - INTERVAL '1 day')
+            ELSE b_4h.start_date::date
+          END
+        ) >= CURRENT_DATE
+      LEFT JOIN bookings b_ft 
+        ON s.id = b_ft.seat_id 
+        AND b_ft.status = 'active' 
+        AND b_ft.duration_type = 'fulltime'
+        AND b_ft.start_date::date <= CURRENT_DATE
+        AND (
+          CASE 
+            WHEN b_ft.subscription_period = '0.5' THEN (b_ft.start_date::date + INTERVAL '14 days')
+            WHEN b_ft.subscription_period = '1' THEN (b_ft.start_date::date + INTERVAL '1 month' - INTERVAL '1 day')
+            ELSE b_ft.start_date::date
+          END
+        ) >= CURRENT_DATE
       ORDER BY s.seat_number
     `);
     res.json({ success: true, seats: result.rows });
@@ -452,6 +474,27 @@ router.get('/expenses', async (req, res) => {
     res.json({ success: true, expenses: result.rows });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch expenses' });
+  }
+});
+
+// Add an expense
+router.post('/expenses', async (req, res) => {
+  try {
+    const { amount, description, admin_name } = req.body;
+    if (!amount || !description || !admin_name) {
+      return res.status(400).json({ success: false, error: 'amount, description, admin_name are required' });
+    }
+    const amountNumber = Number(amount);
+    if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+      return res.status(400).json({ success: false, error: 'amount must be a positive number' });
+    }
+    const result = await db.query(
+      'INSERT INTO expenses (amount, description, admin_name) VALUES ($1, $2, $3) RETURNING *',
+      [amountNumber, description, admin_name]
+    );
+    res.json({ success: true, expense: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to add expense' });
   }
 });
 

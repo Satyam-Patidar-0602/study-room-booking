@@ -26,9 +26,9 @@ import toast from 'react-hot-toast'
 import api from '../services/api'
 import { sendBookingIdCardPDF } from '../utils/sendBookingIdCard';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ initialTab = 'overview' }) => {
   // State for different sections
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [loading, setLoading] = useState(true)
   
   // Data states
@@ -52,11 +52,15 @@ const AdminDashboard = () => {
     phone: ''
   })
   
+  const getTodayStr = () => {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  };
   // Restore paymentStatus in bookingForm state
   const [bookingForm, setBookingForm] = useState({
     studentId: '',
     seatId: '',
-    startDate: '',
+    startDate: getTodayStr(),
     duration: '4',
     subscriptionPeriod: '1',
     totalAmount: '',
@@ -99,15 +103,6 @@ const AdminDashboard = () => {
   // Fetch all data on component mount
   useEffect(() => {
     fetchAllData()
-  }, [])
-
-  // Auto-refresh data every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchAllData()
-    }, 30000) // 30 seconds
-
-    return () => clearInterval(interval)
   }, [])
 
   // Reset seat selection when date changes
@@ -186,7 +181,7 @@ const AdminDashboard = () => {
       setBookingForm({
         studentId: '',
         seatId: '',
-        startDate: '',
+        startDate: getTodayStr(),
         duration: '4',
         subscriptionPeriod: '1',
         totalAmount: '',
@@ -889,168 +884,198 @@ const AdminDashboard = () => {
             {/* Seats Grid (hidden on mobile) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 hidden sm:grid">
               {seats.map(seat => {
-                  // Check for 4 hours booking (any active booking)
+                  // Consider a booking "current" only if today is between start and computed end date
+                  const isCurrent = (b) => {
+                    if (!b) return false;
+                    const bStart = new Date(b.start_date);
+                    bStart.setHours(0,0,0,0);
+                    let bEnd = new Date(bStart);
+                    if (b.subscription_period === '0.5') {
+                      bEnd.setDate(bStart.getDate() + 14);
+                    } else if (b.subscription_period === '1') {
+                      bEnd.setMonth(bStart.getMonth() + 1);
+                      bEnd.setDate(bEnd.getDate() - 1);
+                    }
+                    bEnd.setHours(0,0,0,0);
+                    return today >= bStart && today <= bEnd;
+                  };
+
+                  // Check for 4 hours booking (current only)
                   const booking4h = bookings.find(b => 
                     b && b.seat_id === seat.id && 
                     b.status === 'active' && 
-                    b.duration_type === '4hours'
+                    b.duration_type === '4hours' && isCurrent(b)
                   );
                   
-                  // Check for full time booking (any active booking)
+                  // Check for full time booking (current only)
                   const bookingFt = bookings.find(b => 
                     b && b.seat_id === seat.id && 
                     b.status === 'active' && 
-                    b.duration_type === 'fulltime'
+                    b.duration_type === 'fulltime' && isCurrent(b)
                   );
-                  
-                  // Determine status based on filter
-                  let status = 'available';
-                  let statusColor = 'bg-green-100 text-green-800';
-                  let statusText = 'Available';
-                  
-                  if (seatFilter === '4hours') {
-                    if (booking4h) {
-                      status = 'booked_4h';
-                      statusColor = 'bg-red-100 text-red-800';
-                      statusText = '4H Booked';
-                    } else {
-                      status = 'available_4h';
-                      statusColor = 'bg-green-100 text-green-800';
-                      statusText = '4H Available';
-                    }
-                  } else if (seatFilter === 'fulltime') {
-                    if (bookingFt) {
-                      status = 'booked_ft';
-                      statusColor = 'bg-red-100 text-red-800';
-                      statusText = 'FT Booked';
-                    } else {
-                      status = 'available_ft';
-                      statusColor = 'bg-green-100 text-green-800';
-                      statusText = 'FT Available';
-                    }
-                  } else {
-                    // Show all bookings
-                    if (booking4h && bookingFt) {
-                      status = 'booked_both';
-                      statusColor = 'bg-purple-100 text-purple-800';
-                      statusText = 'Both Booked';
-                    } else if (booking4h) {
-                      status = 'booked_4h';
-                      statusColor = 'bg-orange-100 text-orange-800';
-                      statusText = '4H Booked';
-                    } else if (bookingFt) {
-                      status = 'booked_ft';
-                      statusColor = 'bg-blue-100 text-blue-800';
-                      statusText = 'FT Booked';
-                    } else {
-                      status = 'available';
-                      statusColor = 'bg-green-100 text-green-800';
-                      statusText = 'Available';
-                    }
-                  }
-                  
-                  return (
-                <div key={seat.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">Seat {seat.seat_number}</h3>
-                        <span className={`px-2 py-1 text-xs rounded-full ${statusColor}`}>{statusText}</span>
-                  </div>
-                  <div className="space-y-2">
-                        <p className="text-sm text-gray-600">Column: {seat.column_number}</p>
-                        
-                        {/* Show 4 Hours Booking */}
-                        {booking4h && (
-                          <div className="mt-3 p-3 bg-orange-50 rounded border-l-4 border-orange-500">
-                            <p className="text-xs font-medium text-orange-700 mb-2">4 Hours Booking:</p>
-                            <div className="space-y-1">
-                              <p className="text-xs text-gray-600"><span className="font-medium">Student:</span> {booking4h.user_name || 'Unknown'}</p>
-                              <p className="text-xs text-gray-600"><span className="font-medium">Date:</span> {booking4h.start_date}</p>
-                              <p className="text-xs text-gray-600"><span className="font-medium">Time:</span> {booking4h.start_time || '09:00'}</p>
-                              <p className="text-xs text-gray-600"><span className="font-medium">Period:</span> {booking4h.subscription_period} month(s)</p>
-                              <p className="text-xs text-gray-600"><span className="font-medium">Payment:</span> <span className={`ml-1 px-1 py-0.5 rounded text-xs ${booking4h.payment_status === 'paid' ? 'bg-green-100 text-green-800' : booking4h.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{booking4h.payment_status}</span></p>
-                  </div>
-                          </div>
-                        )}
-                        
-                        {/* Show Full Time Booking */}
-                        {bookingFt && (
-                          <div className="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-500">
-                            <p className="text-xs font-medium text-blue-700 mb-2">Full Time Booking:</p>
-                            <div className="space-y-1">
-                              <p className="text-xs text-gray-600"><span className="font-medium">Student:</span> {bookingFt.user_name || 'Unknown'}</p>
-                              <p className="text-xs text-gray-600"><span className="font-medium">Date:</span> {bookingFt.start_date}</p>
-                              <p className="text-xs text-gray-600"><span className="font-medium">Time:</span> {bookingFt.start_time || '09:00'}</p>
-                              <p className="text-xs text-gray-600"><span className="font-medium">Period:</span> {bookingFt.subscription_period} month(s)</p>
-                              <p className="text-xs text-gray-600"><span className="font-medium">Payment:</span> <span className={`ml-1 px-1 py-0.5 rounded text-xs ${bookingFt.payment_status === 'paid' ? 'bg-green-100 text-green-800' : bookingFt.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{bookingFt.payment_status}</span></p>
-                            </div>
-                          </div>
-                        )}
-                        </div>
-                        {/* Show Available Status */}
-                        {!booking4h && !bookingFt && (
-                          <div className="mt-3 p-3 bg-green-50 rounded border-l-4 border-green-500">
-                            <p className="text-xs font-medium text-green-700">Available for both types</p>
-                            <p className="text-xs text-green-600">No bookings for today</p>
-                          </div>
-                        )}
-                      </div>
-                  )
-                })}
-            </div>
-            {/* Seats Card List (mobile only) */}
-            <div className="block sm:hidden space-y-4">
-              {seats.map(seat => {
-                const booking4h = bookings.find(b => b && b.seat_id === seat.id && b.status === 'active' && b.duration_type === '4hours');
-                const bookingFt = bookings.find(b => b && b.seat_id === seat.id && b.status === 'active' && b.duration_type === 'fulltime');
-                let statusText = 'Available';
-                let statusColor = 'bg-green-100 text-green-800';
-                if (booking4h && bookingFt) {
-                  statusText = 'Both Booked';
-                  statusColor = 'bg-purple-100 text-purple-800';
-                } else if (booking4h) {
-                  statusText = '4H Booked';
-                  statusColor = 'bg-orange-100 text-orange-800';
-                } else if (bookingFt) {
-                  statusText = 'FT Booked';
-                  statusColor = 'bg-blue-100 text-blue-800';
-                }
-                return (
-                  <div key={seat.id} className="bg-white rounded-lg shadow p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-lg font-medium text-gray-900">Seat {seat.seat_number}</h3>
-                      <span className={`px-2 py-1 text-xs rounded-full ${statusColor}`}>{statusText}</span>
-                    </div>
-                    <div className="text-sm text-gray-600 mb-1">Column: {seat.column_number}</div>
-                    {booking4h && (
-                      <div className="mt-2 p-2 bg-orange-50 rounded border-l-4 border-orange-500">
-                        <div className="text-xs font-medium text-orange-700 mb-1">4 Hours Booking:</div>
-                        <div className="text-xs text-gray-600">Student: {booking4h.user_name || 'Unknown'}</div>
-                        <div className="text-xs text-gray-600">Date: {booking4h.start_date}</div>
-                        <div className="text-xs text-gray-600">Time: {booking4h.start_time || '09:00'}</div>
-                        <div className="text-xs text-gray-600">Period: {booking4h.subscription_period} month(s)</div>
-                        <div className="text-xs text-gray-600">Payment: <span className={`ml-1 px-1 py-0.5 rounded text-xs ${booking4h.payment_status === 'paid' ? 'bg-green-100 text-green-800' : booking4h.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{booking4h.payment_status}</span></div>
-                      </div>
-                    )}
-                    {bookingFt && (
-                      <div className="mt-2 p-2 bg-blue-50 rounded border-l-4 border-blue-500">
-                        <div className="text-xs font-medium text-blue-700 mb-1">Full Time Booking:</div>
-                        <div className="text-xs text-gray-600">Student: {bookingFt.user_name || 'Unknown'}</div>
-                        <div className="text-xs text-gray-600">Date: {bookingFt.start_date}</div>
-                        <div className="text-xs text-gray-600">Time: {bookingFt.start_time || '09:00'}</div>
-                        <div className="text-xs text-gray-600">Period: {bookingFt.subscription_period} month(s)</div>
-                        <div className="text-xs text-gray-600">Payment: <span className={`ml-1 px-1 py-0.5 rounded text-xs ${bookingFt.payment_status === 'paid' ? 'bg-green-100 text-green-800' : bookingFt.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{bookingFt.payment_status}</span></div>
-                      </div>
-                    )}
-                    {!booking4h && !bookingFt && (
-                      <div className="mt-2 p-2 bg-green-50 rounded border-l-4 border-green-500">
-                        <div className="text-xs font-medium text-green-700">Available for both types</div>
-                        <div className="text-xs text-green-600">No bookings for today</div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                   
+                   // Determine status based on filter
+                   let status = 'available';
+                   let statusColor = 'bg-green-100 text-green-800';
+                   let statusText = 'Available';
+                   
+                   if (seatFilter === '4hours') {
+                     if (booking4h) {
+                       status = 'booked_4h';
+                       statusColor = 'bg-red-100 text-red-800';
+                       statusText = '4H Booked';
+                     } else {
+                       status = 'available_4h';
+                       statusColor = 'bg-green-100 text-green-800';
+                       statusText = '4H Available';
+                     }
+                   } else if (seatFilter === 'fulltime') {
+                     if (bookingFt) {
+                       status = 'booked_ft';
+                       statusColor = 'bg-red-100 text-red-800';
+                       statusText = 'FT Booked';
+                     } else {
+                       status = 'available_ft';
+                       statusColor = 'bg-green-100 text-green-800';
+                       statusText = 'FT Available';
+                     }
+                   } else {
+                     // Show all bookings
+                     if (booking4h && bookingFt) {
+                       status = 'booked_both';
+                       statusColor = 'bg-purple-100 text-purple-800';
+                       statusText = 'Both Booked';
+                     } else if (booking4h) {
+                       status = 'booked_4h';
+                       statusColor = 'bg-orange-100 text-orange-800';
+                       statusText = '4H Booked';
+                     } else if (bookingFt) {
+                       status = 'booked_ft';
+                       statusColor = 'bg-blue-100 text-blue-800';
+                       statusText = 'FT Booked';
+                     } else {
+                       status = 'available';
+                       statusColor = 'bg-green-100 text-green-800';
+                       statusText = 'Available';
+                     }
+                   }
+                   
+                   return (
+                 <div key={seat.id} className="bg-white rounded-lg shadow p-6">
+                   <div className="flex items-center justify-between mb-4">
+                     <h3 className="text-lg font-medium text-gray-900">Seat {seat.seat_number}</h3>
+                         <span className={`px-2 py-1 text-xs rounded-full ${statusColor}`}>{statusText}</span>
+                   </div>
+                   <div className="space-y-2">
+                         <p className="text-sm text-gray-600">Column: {seat.column_number}</p>
+                         
+                         {/* Show 4 Hours Booking */}
+                         {booking4h && (
+                           <div className="mt-3 p-3 bg-orange-50 rounded border-l-4 border-orange-500">
+                             <p className="text-xs font-medium text-orange-700 mb-2">4 Hours Booking:</p>
+                             <div className="space-y-1">
+                               <p className="text-xs text-gray-600"><span className="font-medium">Student:</span> {booking4h.user_name || 'Unknown'}</p>
+                               <p className="text-xs text-gray-600"><span className="font-medium">Date:</span> {booking4h.start_date}</p>
+                               <p className="text-xs text-gray-600"><span className="font-medium">Time:</span> {booking4h.start_time || '09:00'}</p>
+                               <p className="text-xs text-gray-600"><span className="font-medium">Period:</span> {booking4h.subscription_period} month(s)</p>
+                               <p className="text-xs text-gray-600"><span className="font-medium">Payment:</span> <span className={`ml-1 px-1 py-0.5 rounded text-xs ${booking4h.payment_status === 'paid' ? 'bg-green-100 text-green-800' : booking4h.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{booking4h.payment_status}</span></p>
+                   </div>
+                           </div>
+                         )}
+                         
+                         {/* Show Full Time Booking */}
+                         {bookingFt && (
+                           <div className="mt-3 p-3 bg-blue-50 rounded border-l-4 border-blue-500">
+                             <p className="text-xs font-medium text-blue-700 mb-2">Full Time Booking:</p>
+                             <div className="space-y-1">
+                               <p className="text-xs text-gray-600"><span className="font-medium">Student:</span> {bookingFt.user_name || 'Unknown'}</p>
+                               <p className="text-xs text-gray-600"><span className="font-medium">Date:</span> {bookingFt.start_date}</p>
+                               <p className="text-xs text-gray-600"><span className="font-medium">Time:</span> {bookingFt.start_time || '09:00'}</p>
+                               <p className="text-xs text-gray-600"><span className="font-medium">Period:</span> {bookingFt.subscription_period} month(s)</p>
+                               <p className="text-xs text-gray-600"><span className="font-medium">Payment:</span> <span className={`ml-1 px-1 py-0.5 rounded text-xs ${bookingFt.payment_status === 'paid' ? 'bg-green-100 text-green-800' : bookingFt.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{bookingFt.payment_status}</span></p>
+                             </div>
+                           </div>
+                         )}
+                         </div>
+                         {/* Show Available Status */}
+                         {!booking4h && !bookingFt && (
+                           <div className="mt-3 p-3 bg-green-50 rounded border-l-4 border-green-500">
+                             <p className="text-xs font-medium text-green-700">Available for both types</p>
+                             <p className="text-xs text-green-600">No bookings for today</p>
+                           </div>
+                         )}
+                       </div>
+                   )
+                 })}
+             </div>
+             {/* Seats Card List (mobile only) */}
+             <div className="block sm:hidden space-y-4">
+               {seats.map(seat => {
+                 const isCurrent = (b) => {
+                   if (!b) return false;
+                   const bStart = new Date(b.start_date);
+                   bStart.setHours(0,0,0,0);
+                   let bEnd = new Date(bStart);
+                   if (b.subscription_period === '0.5') {
+                     bEnd.setDate(bStart.getDate() + 14);
+                   } else if (b.subscription_period === '1') {
+                     bEnd.setMonth(bStart.getMonth() + 1);
+                     bEnd.setDate(bEnd.getDate() - 1);
+                   }
+                   bEnd.setHours(0,0,0,0);
+                   return today >= bStart && today <= bEnd;
+                 };
+                 const booking4h = bookings.find(b => b && b.seat_id === seat.id && b.status === 'active' && b.duration_type === '4hours' && isCurrent(b));
+                 const bookingFt = bookings.find(b => b && b.seat_id === seat.id && b.status === 'active' && b.duration_type === 'fulltime' && isCurrent(b));
+                 let statusText = 'Available';
+                 let statusColor = 'bg-green-100 text-green-800';
+                 if (booking4h && bookingFt) {
+                   statusText = 'Both Booked';
+                   statusColor = 'bg-purple-100 text-purple-800';
+                 } else if (booking4h) {
+                   statusText = '4H Booked';
+                   statusColor = 'bg-orange-100 text-orange-800';
+                 } else if (bookingFt) {
+                   statusText = 'FT Booked';
+                   statusColor = 'bg-blue-100 text-blue-800';
+                 }
+                 return (
+                   <div key={seat.id} className="bg-white rounded-lg shadow p-4">
+                     <div className="flex justify-between items-center mb-2">
+                       <h3 className="text-lg font-medium text-gray-900">Seat {seat.seat_number}</h3>
+                       <span className={`px-2 py-1 text-xs rounded-full ${statusColor}`}>{statusText}</span>
+                     </div>
+                     <div className="text-sm text-gray-600 mb-1">Column: {seat.column_number}</div>
+                     {booking4h && (
+                       <div className="mt-2 p-2 bg-orange-50 rounded border-l-4 border-orange-500">
+                         <div className="text-xs font-medium text-orange-700 mb-1">4 Hours Booking:</div>
+                         <div className="text-xs text-gray-600">Student: {booking4h.user_name || 'Unknown'}</div>
+                         <div className="text-xs text-gray-600">Date: {booking4h.start_date}</div>
+                         <div className="text-xs text-gray-600">Time: {booking4h.start_time || '09:00'}</div>
+                         <div className="text-xs text-gray-600">Period: {booking4h.subscription_period} month(s)</div>
+                         <div className="text-xs text-gray-600">Payment: <span className={`ml-1 px-1 py-0.5 rounded text-xs ${booking4h.payment_status === 'paid' ? 'bg-green-100 text-green-800' : booking4h.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{booking4h.payment_status}</span></div>
+                       </div>
+                     )}
+                     {bookingFt && (
+                       <div className="mt-2 p-2 bg-blue-50 rounded border-l-4 border-blue-500">
+                         <div className="text-xs font-medium text-blue-700 mb-1">Full Time Booking:</div>
+                         <div className="text-xs text-gray-600">Student: {bookingFt.user_name || 'Unknown'}</div>
+                         <div className="text-xs text-gray-600">Date: {bookingFt.start_date}</div>
+                         <div className="text-xs text-gray-600">Time: {bookingFt.start_time || '09:00'}</div>
+                         <div className="text-xs text-gray-600">Period: {bookingFt.subscription_period} month(s)</div>
+                         <div className="text-xs text-gray-600">Payment: <span className={`ml-1 px-1 py-0.5 rounded text-xs ${bookingFt.payment_status === 'paid' ? 'bg-green-100 text-green-800' : bookingFt.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{bookingFt.payment_status}</span></div>
+                       </div>
+                     )}
+                     {!booking4h && !bookingFt && (
+                       <div className="mt-2 p-2 bg-green-50 rounded border-l-4 border-green-500">
+                         <div className="text-xs font-medium text-green-700">Available for both types</div>
+                         <div className="text-xs text-green-600">No bookings for today</div>
+                       </div>
+                     )}
+                   </div>
+                 );
+               })}
+             </div>
           </motion.div>
         )}
         {activeTab === 'expenses' && (

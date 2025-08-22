@@ -149,6 +149,10 @@ function App() {
               path="/admin/dashboard" 
               element={<AdminDashboard />} 
             />
+            <Route 
+              path="/admin/expenses" 
+              element={<AdminDashboard initialTab="expenses" />} 
+            />
           </Routes>
         </AnimatePresence>
       </main>
