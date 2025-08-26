@@ -303,8 +303,7 @@ const Booking = () => {
   }
 
   const handlePayment = async () => {
-    // Log booking data before sending
-    // Validate duration and subscriptionPeriod
+    // Validate input
     if (!bookingData.duration || !['full', '4'].includes(bookingData.duration)) {
       toast.error('Please select a valid duration.');
       return;
@@ -313,7 +312,7 @@ const Booking = () => {
       toast.error('Please select a valid subscription period.');
       return;
     }
-
+  
     // 1. Create order on backend
     const orderPayload = {
       customerName: bookingData.name,
@@ -323,29 +322,32 @@ const Booking = () => {
       subscriptionPeriod: bookingData.subscriptionPeriod,
       selectedSeats: bookingData.duration === 'full' ? selectedSeats : []
     };
-            const response = await fetch(`${getBaseUrl()}/api/cashfree/create-order`, {
+  
+    const response = await fetch(`${getBaseUrl()}/api/cashfree/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderPayload)
     });
+  
     const data = await response.json();
     if (!data.success) {
       toast.error('Failed to create payment order');
       return;
     }
-    // Use the official Cashfree JS SDK
+  
+    // 2. Call Cashfree checkout (UI SDK v2)
     try {
-      const cashfree = await loadCashfree({ mode: 'sandbox' }); // or 'production' for live
+      const cashfree = new window.Cashfree({ mode: "production" }); // or "production"
+      console.log(data.payment_session_id);
       cashfree.checkout({
-        paymentSessionId: data.order.payment_session_id,
-        redirectTarget: '_modal',
+        paymentSessionId: data.payment_session_id,
+        redirectTarget: "_modal", // "_self" for redirect, "_modal" for popup
       }).then((result) => {
         if (result.error) {
           toast.error('Error during checkout: ' + result.error.message);
-          // Optionally, navigate to a failure page:
-          // navigate('/booking-failure', { state: { error: result.error } });
         } else if (result.paymentDetails) {
           toast.success('Payment completed!');
+  
           // Save booking in DB
           const bookingDataForAPI = {
             name: bookingData.name,
@@ -359,7 +361,8 @@ const Booking = () => {
             totalAmount: calculateTotal()
           };
           bookingAPI.createBooking(bookingDataForAPI);
-          // Now navigate to success page
+  
+          // Redirect to success page
           navigate('/booking-success', {
             state: {
               bookingDetails: {
@@ -378,11 +381,10 @@ const Booking = () => {
         }
       });
     } catch (err) {
-      toast.error('Failed to load Cashfree SDK');
-      // Optionally, navigate to a failure page:
-      // navigate('/booking-failure', { state: { error: err } });
+      toast.error('Failed to load Cashfree SDK: ' + err.message);
     }
   };
+  
 
   const handleBooking = async () => {
     setIsLoading(true)
