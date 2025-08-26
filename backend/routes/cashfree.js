@@ -28,7 +28,7 @@ router.post("/create-order", async (req, res) => {
   if (String(duration).trim() === "full") {
     orderAmount = subscriptionPeriod === "0.5" ? 300 : 600;
   } else if (String(duration).trim() === "4") {
-    orderAmount = 400;
+    orderAmount = 300;
   }
 
   if (orderAmount <= 0) {
