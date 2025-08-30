@@ -48,7 +48,7 @@
 
   /* Fix chatbot overlapping */
 #chatbot-widget {
-  bottom: 80px !important; /* push chatbot up */
+  bottom: 100px !important; /* push chatbot up */
 }
 
 } 
