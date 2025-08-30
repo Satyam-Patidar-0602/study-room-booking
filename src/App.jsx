@@ -17,6 +17,10 @@ import AdminDashboard from './pages/AdminDashboard';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
+   // hide chatbot on booking-related routes
+  const hideChatbotRoutes = ["/booking", "/booking-success"];
+  const shouldShowChatbot = !hideChatbotRoutes.includes(location.pathname);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -157,7 +161,7 @@ function App() {
         </AnimatePresence>
       </main>
       <Footer />
-      <Chatbot />
+      {shouldShowChatbot && <Chatbot />}
     </div>
   )
 }
