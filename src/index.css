@@ -45,4 +45,10 @@
   .seat-selected {
     @apply bg-primary-100 border-primary-500 text-primary-700;
   }
+
+  /* Fix chatbot overlapping */
+#chatbot-widget {
+  bottom: 80px !important; /* push chatbot up */
+}
+
 } 

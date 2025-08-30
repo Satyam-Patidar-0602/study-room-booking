@@ -963,24 +963,25 @@ const Booking = () => {
                             </div>
                           </div>
                         </div>
-                        {/* 2. Sticky bar for selected seat (mobile only) */}
+                        {/* 2. Sticky bar for selected seat (mobile only) */}  {/* 2. Sticky bar for selected seat (mobile only) */}
                         {selectedSeats.length > 0 && (
                           <div className="fixed bottom-0 left-0 right-0 z-40 bg-primary-700 text-white flex items-center justify-between px-4 py-3 sm:hidden shadow-lg border-t border-primary-800">
                             <div className="flex items-center gap-2">
                               <Users className="w-5 h-5" />
-                              <span className="font-semibold">Selected Seat: {selectedSeats[0]}</span>
+                              <span className="font-semibold">Seat {selectedSeats[0]} Selected</span>
                             </div>
                             <button
                               className="bg-white text-primary-700 font-bold px-4 py-2 rounded-lg shadow hover:bg-primary-100 transition-all text-sm"
                               onClick={() => {
-                                const el = document.getElementById('seat-grid');
-                                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                handleNextStep(); // 🚀 directly move to step 2
+                                scrollToBookingForm(); // smooth scroll if needed
                               }}
                             >
-                              Go to Seats
+                              Continue
                             </button>
                           </div>
                         )}
+
                       </>
                     )}
                     
@@ -1360,5 +1361,6 @@ const Booking = () => {
     </div>
   )
 }
+
 
 export default Booking 
