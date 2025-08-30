@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -17,7 +17,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
-   // hide chatbot on booking-related routes
+   const location = useLocation(); 
   const hideChatbotRoutes = ["/booking", "/booking-success"];
   const shouldShowChatbot = !hideChatbotRoutes.includes(location.pathname);
 
