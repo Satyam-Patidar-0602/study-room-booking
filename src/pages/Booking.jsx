@@ -90,7 +90,7 @@ const Booking = () => {
       seatAllocation: 'user'
     }
   ];
-
+  
   // When the user clicks Continue, if 4 Hours is selected, set isEvening to true for the next booking
   useEffect(() => {
     if (bookingData.duration === '4') {
@@ -486,6 +486,10 @@ const Booking = () => {
   }
 
   const isDesktop = window.innerWidth >= 768; // For mobile screens
+
+  const showStickyContinue =
+  bookingData.duration === "4" || 
+  (bookingData.duration === "full" && selectedSeats.length > 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -963,25 +967,18 @@ const Booking = () => {
                             </div>
                           </div>
                         </div>
-                        {/* 2. Sticky bar for selected seat (mobile only) */}  {/* 2. Sticky bar for selected seat (mobile only) */}
-                        {selectedSeats.length > 0 && (
-                          <div className="fixed bottom-0 left-0 right-0 z-40 bg-primary-700 text-white flex items-center justify-between px-4 py-3 sm:hidden shadow-lg border-t border-primary-800">
-                            <div className="flex items-center gap-2">
-                              <Users className="w-5 h-5" />
-                              <span className="font-semibold">Seat {selectedSeats[0]} Selected</span>
-                            </div>
-                            <button
-                              className="bg-white text-primary-700 font-bold px-4 py-2 rounded-lg shadow hover:bg-primary-100 transition-all text-sm"
-                              onClick={() => {
-                                handleNextStep(); // 🚀 directly move to step 2
-                                scrollToBookingForm(); // smooth scroll if needed
-                              }}
-                            >
-                              Continue
-                            </button>
-                          </div>
-                        )}
-
+                        {showStickyContinue && (
+                        <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md p-4 flex justify-between items-center z-50 md:hidden">
+                          <span className="font-medium">
+                            {bookingData.duration === "4"
+                              ? "4 Hours (Morning/Evening)"
+                              : `Seat ${selectedSeats.join(", ")} - Full Time`}
+                          </span>
+                          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Continue
+                          </button>
+                        </div>
+                          )}
                       </>
                     )}
                     
