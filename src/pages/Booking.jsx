@@ -974,8 +974,12 @@ const Booking = () => {
                               ? "4 Hours (Morning/Evening)"
                               : `Seat ${selectedSeats.join(", ")} - Full Time`}
                           </span>
-                          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                            Continue
+                          <button 
+                            onClick={handleNextStep}
+                            disabled={isLoading}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isLoading ? "Processing..." : "Continue"}
                           </button>
                         </div>
                           )}
